@@ -301,6 +301,7 @@
 
             <div style="margin: 20px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
             <button id="nav-store" class="nav-btn" style="color:#ffeaa7" onclick="window.loadStore()">🛒 XP Store</button>
+            <button id="nav-refs" class="nav-btn" onclick="window.loadReferences()">📚 References</button>
         </div>
 
         <div class="status-panel">
@@ -416,6 +417,46 @@ document.addEventListener('DOMContentLoaded', function() {
                 <h3>🚀 Begin Your Journey</h3>
                 <p>The first realm awaits. Can you identify the parts of the whole?</p>
                 <button class="btn" style="width:100%" onclick="window.loadLessonIntro(1)">Enter Level 1 ➡️</button>
+            </div>
+        `,
+        references: `
+            <h1>📚 Mission Archives (References)</h1>
+            <div style="background:white; padding:30px; border-radius:15px; box-shadow: var(--card-shadow);">
+                <h3 style="color:var(--primary);">📖 Lesson Materials & Concepts</h3>
+                <p>The core curriculum data was synthesized from standard Algebra I educational resources:</p>
+                <ul style="list-style:none; padding:0;">
+                    <li style="margin-bottom:15px; padding:15px; background:#f9f9f9; border-radius:8px; border-left:4px solid var(--accent);">
+                        <strong>Level 1: Anatomy of Algebra</strong><br>
+                        <em>Source:</em> OpenStax Elementary Algebra 2e, Chapter 1.<br>
+                        <a href="https://openstax.org/books/elementary-algebra-2e/pages/1-introduction" target="_blank" style="color:var(--primary); font-weight:bold;">View Source 🔗</a>
+                    </li>
+                    <li style="margin-bottom:15px; padding:15px; background:#f9f9f9; border-radius:8px; border-left:4px solid var(--accent);">
+                        <strong>Level 2: Language of Algebra</strong><br>
+                        <em>Source:</em> Khan Academy, "Writing Expressions".<br>
+                        <a href="https://www.khanacademy.org/math/algebra-home/alg-intro-to-algebra/alg-writing-expressions/a/writing-expressions" target="_blank" style="color:var(--primary); font-weight:bold;">View Source 🔗</a>
+                    </li>
+                    <li style="margin-bottom:15px; padding:15px; background:#f9f9f9; border-radius:8px; border-left:4px solid var(--accent);">
+                        <strong>Level 3: Properties of Equality</strong><br>
+                        <em>Source:</em> OpenStax Prealgebra 2e, Chapter 7.<br>
+                        <a href="https://openstax.org/books/prealgebra-2e/pages/7-key-concepts" target="_blank" style="color:var(--primary); font-weight:bold;">View Source 🔗</a>
+                    </li>
+                    <li style="margin-bottom:15px; padding:15px; background:#f9f9f9; border-radius:8px; border-left:4px solid var(--accent);">
+                        <strong>Level 4: Solving Equations</strong><br>
+                        <em>Source:</em> LibreTexts Mathematics, "Solving Linear Equations".<br>
+                        <a href="https://math.libretexts.org/Bookshelves/Algebra/Elementary_Algebra_(LibreTexts)/02%3A_Linear_Equations_and_Inequalities/2.03%3A_Solving_Linear_Equations-_Part_1" target="_blank" style="color:var(--primary); font-weight:bold;">View Source 🔗</a>
+                    </li>
+                </ul>
+                <hr style="border:0; border-top:1px solid #eee; margin:30px 0;">
+                <h3 style="color:var(--primary);">📡 Transmissions (Video Sources)</h3>
+                <ul style="list-style:none; padding:0;">
+                    <li style="margin-bottom:10px;"><em>"Algebra Basics: What Is Algebra?"</em> by Math Antics.</li>
+                    <li style="margin-bottom:10px;"><em>"Translating Words to Algebraic Expressions"</em> by Math with Mr. J.</li>
+                    <li style="margin-bottom:10px;"><em>"Commutative, Associative, Distributive Properties"</em> by Math Antics.</li>
+                    <li style="margin-bottom:10px;"><em>"Solving One-Step Equations"</em> by Math with Mr. J.</li>
+                </ul>
+                <hr style="border:0; border-top:1px solid #eee; margin:30px 0;">
+                <h3 style="color:var(--primary);">🧠 Training Methodology</h3>
+                <p>This simulation utilizes the <strong>5E Instructional Model</strong> (Engage, Explore, Explain, Elaborate, Evaluate) to ensure maximum retention of algebraic concepts.</p>
             </div>
         `,
         lessons: {
@@ -544,6 +585,13 @@ document.addEventListener('DOMContentLoaded', function() {
         window.updateSidebar();
         document.getElementById('progressText').innerText = "Standby";
         document.getElementById('pBar').style.width = '0%';
+    };
+
+    window.loadReferences = function() {
+        currentView = 'references';
+        document.getElementById('phaseNav').classList.remove('visible');
+        document.getElementById('contentArea').innerHTML = content.references;
+        window.updateSidebar();
     };
 
     window.loadStore = function() {
@@ -743,6 +791,8 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('nav-home').classList.add('active');
         } else if (currentView === 'store') {
             document.getElementById('nav-store').classList.add('active');
+        } else if (currentView === 'references') {
+            document.getElementById('nav-refs').classList.add('active');
         } else if (currentView === 'lesson') {
             document.getElementById(`nav-${currentLesson}`).classList.add('active');
         }
@@ -833,19 +883,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 let props = ['Commutative','Associative','Distributive','Identity','Inverse'];
                 props = shuffle(props); 
                 props.forEach(p => {
-                    // SAFETY FILTER HERE for display, compare against raw in checkStd
+                    // SAFETY FILTER for button content, PASS RAW to checker
                     html += `<button class="btn btn-outline" onclick="window.checkStd('${escapeHtml(p)}','${round.ans}','${type}')">${escapeHtml(p)}</button>`;
                 });
             } else if (data.type === 'truth') {
-                // True/False don't need escaping, safe literals
+                // True/False safe literals
                 html += `<button class="btn" style="background:var(--success)" onclick="window.checkStd('True','${round.a}','${type}')">True</button>`;
                 html += `<button class="btn" style="background:var(--error)" onclick="window.checkStd('False','${round.a}','${type}')">False</button>`;
             } else if (data.type === 'balance') {
-                // APPLY SAFETY FILTER HERE
-                round.opts.forEach(o => html += `<button class="btn btn-outline" onclick="window.checkBalance('${escapeHtml(o)}','${round.a}','${type}')">${escapeHtml(o)}</button>`);
+                // FIXED: Pass raw strings to checker, but escape display
+                round.opts.forEach(o => html += `<button class="btn btn-outline" onclick="window.checkBalance('${o}','${round.a}','${type}')">${escapeHtml(o)}</button>`);
             } else {
-                // APPLY SAFETY FILTER HERE
-                round.opts ? round.opts.forEach(o => html += `<button class="btn btn-outline" onclick="window.checkStd('${escapeHtml(o)}','${round.a}','${type}')">${escapeHtml(o)}</button>`) : null;
+                // FIXED: Pass raw strings to checker, but escape display
+                round.opts ? round.opts.forEach(o => html += `<button class="btn btn-outline" onclick="window.checkStd('${o}','${round.a}','${type}')">${escapeHtml(o)}</button>`) : null;
             }
             html += `</div><div id="fb" class="feedback"></div>`;
         }
@@ -864,11 +914,8 @@ document.addEventListener('DOMContentLoaded', function() {
         board.innerHTML = html;
     };
 
-    // --- CHECKERS (FIXED: COMPARE RAW INPUT VS RAW ANSWER) ---
+    // --- CHECKERS (FIXED: RAW COMPARISON) ---
     window.checkStd = function(input, correct, type) {
-        // Browser decodes &lt; back to < when passing to function.
-        // Input is raw. Correct is raw (from data object).
-        // Simply compare.
         if(input === correct) {
             window.showFb(true, "Correct!"); gameScore++;
             setTimeout(() => { gameRound++; window.renderGameRound(type); }, 1000);
@@ -895,7 +942,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.checkBalance = function(input, correct, type) {
         const beam = document.getElementById('scaleBeam');
-        // SAME FIX HERE: Raw comparison
         if(input === correct) {
             beam.style.transform = "rotate(0deg)";
             window.showFb(true, "Balanced!"); gameScore++;
@@ -943,7 +989,7 @@ document.addEventListener('DOMContentLoaded', function() {
         activeQuizQuestions.forEach((q, i) => {
             let opts = "";
             q.opts.forEach((o, optIdx) => {
-                // APPLY SAFETY FILTER HERE TOO
+                // FIXED: Use escapeHtml for DISPLAY only
                 opts += `<span class="quiz-opt" id="q${i}_o${optIdx}" onclick="window.selectQuizOpt(${i}, ${optIdx})">${escapeHtml(o)}</span>`;
             });
             html += `<div class="quiz-item"><p><strong>${i+1}.</strong> ${q.q}</p>${opts}</div>`;
