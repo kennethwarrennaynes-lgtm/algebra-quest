@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Algebra Quest: Ultimate Edition</title>
+    <title>Algebra Quest: Restoration</title>
     <style>
-        /* --- THEME: NEBULA PURPLE --- */
+        /* --- THEME VARIABLES --- */
         :root {
             --primary: #6c5ce7;
             --primary-dark: #4834d4;
@@ -21,21 +21,33 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
 
-        body { display: flex; min-height: 100vh; background: var(--bg-light); color: var(--text); }
+        body { display: flex; min-height: 100vh; background: var(--bg-light); color: var(--text); transition: background 0.5s; }
+
+        /* --- ANIMATIONS --- */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 80% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); } }
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
+        @keyframes dropDown { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes pulseGreen { 0% { transform: scale(1); } 50% { transform: scale(1.1); box-shadow: 0 0 20px var(--success); } 100% { transform: scale(1); } }
+        @keyframes glowText { 0% { text-shadow: 0 0 5px var(--accent); } 50% { text-shadow: 0 0 20px var(--accent); } 100% { text-shadow: 0 0 5px var(--accent); } }
 
         /* --- SIDEBAR --- */
         .sidebar {
-            width: 300px; background: var(--bg-dark); color: white;
-            padding: 20px; position: fixed; height: 100vh; overflow-y: auto;
+            width: 320px; background: var(--bg-dark); color: white;
+            padding: 25px; position: fixed; height: 100vh; overflow-y: auto;
             border-right: 5px solid var(--primary); z-index: 100;
+            display: flex; flex-direction: column; transition: border-color 0.5s, background 0.5s;
         }
 
         .brand {
             font-size: 1.8em; font-weight: 800; text-align: center;
             color: var(--accent); text-transform: uppercase; letter-spacing: 2px;
-            margin-bottom: 40px; cursor: pointer;
-            text-shadow: 0 0 10px rgba(0, 206, 201, 0.5);
+            margin-bottom: 30px; cursor: pointer;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
         }
+
+        .nav-section { flex: 1; }
 
         .nav-btn {
             display: block; width: 100%; padding: 15px 20px; margin-bottom: 10px;
@@ -45,48 +57,88 @@
         }
         .nav-btn:hover { background: rgba(255,255,255,0.1); color: white; padding-left: 25px; }
         .nav-btn.active { background: var(--primary); color: white; border-left: 5px solid var(--accent); }
-        .nav-btn.locked { opacity: 0.5; cursor: not-allowed; position: relative; }
-        .nav-btn.locked::after { content: '🔒'; position: absolute; right: 20px; }
         .nav-btn.completed::after { content: '✓'; position: absolute; right: 20px; color: var(--success); }
 
-        .xp-box {
-            margin-top: 40px; background: rgba(0,0,0,0.3); padding: 20px;
+        /* --- XP & PROGRESS --- */
+        .status-panel {
+            margin-top: 20px;
+            background: rgba(0,0,0,0.3); padding: 20px;
             border-radius: 15px; text-align: center; border: 2px solid var(--accent);
         }
 
-        /* --- MAIN CONTENT --- */
-        .main-content { margin-left: 300px; flex: 1; padding: 40px; width: calc(100% - 300px); }
+        .rank-badge {
+            font-size: 0.9em; letter-spacing: 1px; color: var(--secondary);
+            margin-bottom: 5px; text-transform: uppercase; font-weight: bold;
+        }
 
-        .progress-bar {
-            width: 100%; height: 8px; background: #dfe6e9; border-radius: 4px;
-            margin-bottom: 20px; overflow: hidden;
+        .xp-display {
+            font-size: 2.5em; font-weight: 800; color: white;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            margin-bottom: 15px;
         }
-        .progress-fill {
-            height: 100%; background: linear-gradient(90deg, var(--accent), var(--primary));
+
+        .progress-label {
+            font-size: 0.8em; color: #b2bec3; text-align: left; margin-bottom: 5px; display: flex; justify-content: space-between;
+        }
+
+        .sidebar-progress-bar {
+            width: 100%; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px;
+            overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+        }
+        .sidebar-progress-fill {
+            height: 100%; background: linear-gradient(90deg, var(--accent), var(--success));
             width: 0%; transition: width 0.5s ease;
+            box-shadow: 0 0 10px var(--accent);
         }
+
+        /* --- MAIN CONTENT --- */
+        .main-content { margin-left: 320px; flex: 1; padding: 40px; width: calc(100% - 320px); transition: padding 0.3s; }
+
+        /* --- STORE STYLES --- */
+        .store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
+        .store-item {
+            background: white; border: 2px solid #ddd; border-radius: 15px; padding: 20px;
+            text-align: center; transition: 0.3s; position: relative; overflow: hidden;
+        }
+        .store-item:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .store-icon { font-size: 3em; margin-bottom: 10px; }
+        .store-price { font-weight: bold; color: var(--primary-dark); background: #eef; padding: 5px 10px; border-radius: 20px; display: inline-block; margin: 10px 0; }
+        .btn-buy { width: 100%; background: var(--bg-dark); color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer; }
+        .btn-buy:hover { background: var(--primary); }
+        .btn-buy:disabled { background: #ccc; cursor: not-allowed; }
+        
+        .btn-equip { width: 100%; background: var(--primary); color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer; }
+        .btn-equip:hover { background: var(--primary-dark); }
+        
+        .btn-active { width: 100%; background: var(--success); color: white; border: none; padding: 8px; border-radius: 5px; cursor: default; }
+        
+        .item-owned { border-color: var(--success); background: #f0fff4; }
+        .item-owned::after { content: "OWNED"; position: absolute; top: 10px; right: -30px; background: var(--success); color: white; padding: 5px 30px; transform: rotate(45deg); font-size: 0.8em; }
 
         /* --- PHASE NAV --- */
         .phase-nav {
             display: flex; gap: 10px; margin-bottom: 30px; visibility: hidden;
             background: white; padding: 15px; border-radius: 15px; box-shadow: var(--card-shadow);
+            animation: slideUp 0.5s ease; justify-content: center;
         }
         .phase-nav.visible { visibility: visible; }
 
         .phase-btn {
             padding: 10px 20px; border: none; background: transparent; font-weight: 700;
-            color: #636e72; cursor: pointer; border-radius: 20px; transition: 0.2s;
+            color: #b2bec3; cursor: not-allowed; border-radius: 20px; transition: 0.2s; position: relative;
         }
-        .phase-btn:hover { background: #f1f2f6; color: var(--primary); }
-        .phase-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(108, 92, 231, 0.3); }
+        .phase-btn.active { background: var(--primary); color: white; cursor: default; box-shadow: 0 4px 10px rgba(108, 92, 231, 0.3); transform: scale(1.05); }
+        .phase-btn.done { color: var(--success); border: 2px solid var(--success); cursor: pointer; }
+        .phase-btn.done::after { content: '✓'; margin-left:5px; }
+        .phase-btn.unlocked { color: #636e72; cursor: pointer; border: 2px solid #dfe6e9; }
+        .phase-btn.unlocked:hover { background: #f1f2f6; color: var(--primary); }
 
         /* --- CONTENT CARD --- */
         .content-card {
             background: white; padding: 50px; border-radius: 25px;
-            box-shadow: var(--card-shadow); min-height: 60vh;
+            box-shadow: var(--card-shadow); min-height: 70vh;
             animation: fadeIn 0.5s ease; position: relative; padding-bottom: 100px;
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         h1 { color: var(--primary-dark); font-size: 2.5em; margin-bottom: 20px; }
         h2 { color: var(--primary); border-bottom: 3px solid var(--secondary); padding-bottom: 10px; margin-bottom: 20px; }
@@ -100,22 +152,37 @@
             background: #f8f9fa; border: 3px dashed #b2bec3; border-radius: 20px;
             padding: 30px; text-align: center; margin: 20px 0; min-height: 400px;
             display: flex; flex-direction: column; justify-content: flex-start; align-items: center;
+            animation: slideUp 0.4s ease;
         }
 
         .mission-brief {
             background: #e3f2fd; color: #0d47a1; padding: 20px; border-radius: 10px;
             margin-bottom: 25px; width: 100%; font-weight: normal; border-left: 5px solid #2196f3;
-            text-align: left;
+            text-align: left; animation: fadeIn 0.8s ease;
         }
         .mission-brief strong { display: block; margin-bottom: 5px; font-size: 1.2em; }
 
+        /* --- WORD BOX STYLES --- */
+        .word-box {
+            display: inline-block; padding: 15px 25px; margin: 8px; background: white;
+            border: 2px solid #b2bec3; border-radius: 12px; cursor: pointer;
+            font-size: 1.4em; font-weight: bold; color: #2d3436; transition: 0.2s;
+            box-shadow: 0 4px 0 #b2bec3;
+        }
+        .word-box:hover { transform: translateY(-2px); border-color: var(--primary); color: var(--primary); }
+        .word-box:active { transform: translateY(2px); box-shadow: none; }
+        .word-box.correct { animation: pulseGreen 0.5s ease forwards; background: var(--success); color: white; border-color: var(--success); box-shadow: 0 4px 0 #00947e; pointer-events: none; }
+        .word-box.wrong { animation: shake 0.4s; background: #ff7675; color: white; border-color: #d63031; box-shadow: 0 4px 0 #c0392b; }
+
+        /* --- CLICKER STYLES --- */
         .highlightable { 
             cursor: pointer; padding: 8px 12px; border-radius: 8px; border: 2px solid #ddd; 
             transition: 0.2s; display: inline-block; font-size: 1.5em; font-family: 'Courier New', monospace; font-weight: bold;
             background: white; margin: 0 5px;
         }
         .highlightable:hover { background: #dfe6e9; border-color: var(--primary); transform: translateY(-2px); }
-        .highlightable.selected { background: var(--success); color: white; border-color: var(--success); }
+        .highlightable.selected { animation: pulseGreen 0.5s ease forwards; background: var(--success); color: white; border-color: var(--success); }
+        .highlightable.wrong { animation: shake 0.4s; background: #fab1a0; border-color: #d63031; }
 
         .btn {
             background: var(--primary); color: white; border: none; padding: 12px 30px;
@@ -124,40 +191,29 @@
         }
         .btn:hover { transform: translateY(-3px); background: var(--primary-dark); }
         .btn-outline { background: white; border: 2px solid var(--primary); color: var(--primary); }
-        .btn-next { position: absolute; bottom: 40px; right: 40px; background: var(--success); }
-        .btn-disabled { background: #b2bec3; cursor: not-allowed; transform: none; box-shadow: none; }
-
-        /* Game Elements */
+        .btn-next { position: absolute; bottom: 40px; right: 40px; background: var(--success); animation: popIn 0.5s ease; }
+        
         .token { background: var(--accent); padding: 10px 15px; border-radius: 5px; cursor: pointer; margin: 5px; display: inline-block; font-weight: bold; color: white; }
         
-        /* --- VISUAL SCALE CSS --- */
-        .scale-wrapper {
-            width: 400px; height: 180px; position: relative; margin: 40px auto;
-        }
-        .scale-stand {
-            width: 10px; height: 120px; background: #b2bec3; position: absolute; bottom: 0; left: 195px;
-        }
-        .scale-base {
-            width: 100px; height: 10px; background: #2d3436; position: absolute; bottom: 0; left: 150px; border-radius: 5px;
-        }
+        /* SCALE CSS */
+        .scale-wrapper { width: 400px; height: 180px; position: relative; margin: 40px auto; }
+        .scale-stand { width: 10px; height: 120px; background: #b2bec3; position: absolute; bottom: 0; left: 195px; }
+        .scale-base { width: 100px; height: 10px; background: #2d3436; position: absolute; bottom: 0; left: 150px; border-radius: 5px; }
         .scale-beam {
             width: 340px; height: 8px; background: #2d3436; position: absolute; top: 60px; left: 30px;
-            transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
             transform-origin: center; z-index: 2;
+            transform: rotate(-15deg);
         }
         .plate-rope-l { width: 2px; height: 50px; background: #b2bec3; position: absolute; top: 0; left: 0; }
         .plate-rope-r { width: 2px; height: 50px; background: #b2bec3; position: absolute; top: 0; right: 0; }
-        
         .plate {
             width: 70px; height: 10px; background: #2d3436; position: absolute; top: 50px;
-            display: flex; justify-content: center;
+            display: flex; justify-content: center; flex-wrap: wrap-reverse; align-content: flex-start;
         }
-        .plate-l { left: -35px; } /* Relative to rope */
+        .plate-l { left: -35px; } 
         .plate-r { right: -35px; }
-
-        .scale-content {
-            position: absolute; bottom: 10px; width: 60px; text-align: center; font-weight: bold; color: var(--primary);
-        }
+        .weight-cube { width: 20px; height: 20px; background: var(--accent); margin: 1px; border:1px solid rgba(0,0,0,0.1); animation: dropDown 0.5s ease; }
 
         .video-container {
             position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;
@@ -165,27 +221,63 @@
         }
         .video-container iframe { position: absolute; top:0; left:0; width: 100%; height: 100%; }
 
-        /* --- ELABORATE INTERACTION STYLES --- */
         .elaborate-box {
             background: #fff; border: 1px solid #ddd; border-left: 5px solid var(--primary);
             padding: 20px; border-radius: 10px; margin-bottom: 20px;
         }
-        .elaborate-input { padding: 10px; border: 2px solid #ccc; border-radius: 5px; width: 150px; font-size: 1em; }
+        .elaborate-input { padding: 10px; border: 2px solid #ccc; border-radius: 5px; width: 150px; font-size: 1.1em; }
 
-        /* --- QUIZ STYLES --- */
-        .quiz-item { background: #f1f2f6; padding: 20px; border-radius: 15px; margin-bottom: 15px; }
-        .quiz-opt { 
-            display: block; background: white; padding: 15px; margin: 10px 0; 
-            border: 2px solid #ddd; border-radius: 10px; cursor: pointer; transition: 0.2s;
+        /* --- QUIZ STYLES (FIXED) --- */
+        .quiz-item { 
+            background: #f1f2f6; 
+            padding: 25px; 
+            border-radius: 15px; 
+            margin-bottom: 25px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
-        .quiz-opt:hover { border-color: var(--primary); background: #eef; }
-        .quiz-opt.selected { background: var(--primary); color: white; border-color: var(--primary); }
         
-        .quiz-score-box { text-align: center; padding: 40px; background: #eef; border-radius: 20px; margin-top: 20px; }
+        .quiz-item p {
+            font-weight: 600;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: var(--primary-dark);
+        }
+
+        .quiz-opt { 
+            display: flex;               
+            align-items: center;         
+            width: 100%;                 
+            background: white; 
+            padding: 12px 20px;          
+            margin: 8px 0; 
+            border: 2px solid #ddd; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            transition: all 0.2s ease;
+            font-size: 1.1em;
+            min-height: 50px;            
+        }
+
+        .quiz-opt:hover { 
+            border-color: var(--primary); 
+            background: #f8f9fa; 
+            transform: translateX(5px); 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .quiz-opt.selected { 
+            background: var(--primary); 
+            color: white; 
+            border-color: var(--primary); 
+            font-weight: bold;
+        }
+
+        .quiz-score-box { text-align: center; padding: 40px; background: #eef; border-radius: 20px; margin-top: 20px; animation: popIn 0.5s ease; }
 
         .feedback {
             margin-top: 20px; padding: 15px; border-radius: 10px; font-weight: bold;
             display: none; font-size: 1.2em; width: 80%;
+            animation: popIn 0.3s ease;
         }
         .feedback.correct { background: #d4edda; color: #155724; display: block; border: 1px solid #c3e6cb; }
         .feedback.wrong { background: #f8d7da; color: #721c24; display: block; border: 1px solid #f5c6cb; }
@@ -197,29 +289,41 @@
     <div class="sidebar">
         <div class="brand" onclick="window.loadHome()">ALGEBRA QUEST</div>
         
-        <button class="nav-btn active" onclick="window.loadHome()">🏠 Mission Control</button>
-        <div style="margin: 20px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
-        
-        <button id="nav-1" class="nav-btn" onclick="window.loadLessonIntro(1)">1. Anatomy of Algebra</button>
-        <button id="nav-2" class="nav-btn locked" onclick="window.loadLessonIntro(2)">2. Language of Algebra</button>
-        <button id="nav-3" class="nav-btn locked" onclick="window.loadLessonIntro(3)">3. Properties of Equality</button>
-        <button id="nav-4" class="nav-btn locked" onclick="window.loadLessonIntro(4)">4. Solving Equations</button>
+        <div class="nav-section">
+            <button id="nav-home" class="nav-btn active" onclick="window.loadHome()">🏠 Mission Control</button>
+            
+            <div style="margin: 20px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
+            
+            <button id="nav-1" class="nav-btn" onclick="window.loadLessonIntro(1)">1. Anatomy of Algebra</button>
+            <button id="nav-2" class="nav-btn" onclick="window.loadLessonIntro(2)">2. Language of Algebra</button>
+            <button id="nav-3" class="nav-btn" onclick="window.loadLessonIntro(3)">3. Properties of Equality</button>
+            <button id="nav-4" class="nav-btn" onclick="window.loadLessonIntro(4)">4. Solving Equations</button>
 
-        <div class="xp-box">
-            <div style="font-size:0.8em; text-transform:uppercase; color:#b2bec3;">Total XP</div>
-            <div id="totalXP" style="font-size:2.5em; font-weight:800; color:var(--accent);">0</div>
+            <div style="margin: 20px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
+            <button id="nav-store" class="nav-btn" style="color:#ffeaa7" onclick="window.loadStore()">🛒 XP Store</button>
+        </div>
+
+        <div class="status-panel">
+            <div id="rankTitle" class="rank-badge">NOVICE</div>
+            <div class="xp-display"><span id="totalXP">0</span> XP</div>
+            
+            <div class="progress-label">
+                <span>Mission Progress</span>
+                <span id="progressText">0%</span>
+            </div>
+            <div class="sidebar-progress-bar">
+                <div id="pBar" class="sidebar-progress-fill"></div>
+            </div>
         </div>
     </div>
 
     <div class="main-content">
-        <div class="progress-bar"><div id="pBar" class="progress-fill"></div></div>
-        
         <div id="phaseNav" class="phase-nav">
-            <button class="phase-btn" onclick="window.setPhase('engage')">✨ Engage</button>
-            <button class="phase-btn" onclick="window.setPhase('explore')">🔍 Explore</button>
-            <button class="phase-btn" onclick="window.setPhase('explain')">📚 Explain</button>
-            <button class="phase-btn" onclick="window.setPhase('elaborate')">🚀 Elaborate</button>
-            <button class="phase-btn" onclick="window.setPhase('evaluate')">✅ Evaluate</button>
+            <button id="btn-engage" class="phase-btn">✨ Engage</button>
+            <button id="btn-explore" class="phase-btn">🔍 Explore</button>
+            <button id="btn-explain" class="phase-btn">📚 Explain</button>
+            <button id="btn-elaborate" class="phase-btn">🚀 Elaborate</button>
+            <button id="btn-evaluate" class="phase-btn">✅ Evaluate</button>
         </div>
 
         <div id="contentArea" class="content-card">
@@ -228,366 +332,339 @@
     </div>
 
 <script>
-// Defining functions globally to ensure HTML onclick access
-(function() {
-    /* =========================================
-       DATA STORE
-       ========================================= */
+document.addEventListener('DOMContentLoaded', function() {
     let currentLesson = 1;
-    let unlockedLessons = 1;
+    let unlockedLessons = 4;
     let xp = 0;
-    let quizAnswers = []; 
+    
+    // NAVIGATION STATE TRACKING
+    let currentView = 'home'; 
+
+    let progress = {
+        1: { engage: false, explore: false, explain: false, elaborate: false, evaluate: false, complete: false },
+        2: { engage: false, explore: false, explain: false, elaborate: false, evaluate: false, complete: false },
+        3: { engage: false, explore: false, explain: false, elaborate: false, evaluate: false, complete: false },
+        4: { engage: false, explore: false, explain: false, elaborate: false, evaluate: false, complete: false }
+    };
+
+    // STORE INVENTORY SYSTEM
+    let activeTheme = 'theme_nebula'; // Track active theme
+    let inventory = {
+        'theme_nebula': true, // Default owned
+        'theme_cyber': false,
+        'theme_inferno': false,
+        'theme_forest': false,
+        'badge_genius': false
+    };
+
+    const storeItems = [
+        { id: 'theme_nebula', name: 'Nebula (Default)', type: 'theme', cost: 0, desc: 'The classic look.', colors: { primary: '#6c5ce7', dark: '#2d3436', bg: '#f5f6fa', accent: '#00cec9', sec: '#a29bfe' } },
+        { id: 'theme_cyber', name: 'Cyber Blue', type: 'theme', cost: 100, desc: 'A futuristic blue look.', colors: { primary: '#0984e3', dark: '#000000', bg: '#dfe6e9', accent: '#74b9ff', sec: '#74b9ff' } },
+        { id: 'theme_inferno', name: 'Inferno Red', type: 'theme', cost: 200, desc: 'Fiery passion for math.', colors: { primary: '#d63031', dark: '#2d3436', bg: '#fab1a0', accent: '#ff7675', sec: '#ff7675' } },
+        { id: 'theme_forest', name: 'Forest Green', type: 'theme', cost: 150, desc: 'Calming nature vibes.', colors: { primary: '#00b894', dark: '#1e272e', bg: '#dff9fb', accent: '#55efc4', sec: '#55efc4' } },
+        { id: 'badge_genius', name: 'Badge: Certified Genius', type: 'badge', cost: 500, desc: 'Adds a ⭐ to your Rank Title.', icon: '⭐' }
+    ];
+
     let currentPhase = 'engage';
     let gameRound = 0;
     let gameScore = 0;
     let currentBuilder = "";
+    
+    let activeGameRounds = [];
+    let activeQuizQuestions = [];
+    let quizAnswers = [];
+
+    // --- RANDOMIZATION HELPER ---
+    function shuffle(array) {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex != 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
+    // --- HTML SANITIZER (Safety Filter) ---
+    function escapeHtml(text) {
+        if (typeof text !== 'string') return text;
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
 
     const content = {
         home: `
             <div style="text-align:center;">
-                <h1 style="font-size:3em; color:var(--primary);">Welcome to Algebra Quest</h1>
-                <p style="font-size:1.5em; color:#636e72;">Unlock the secrets of the Unknown Variable.</p>
+                <h1 style="font-size:3em; color:var(--primary); animation: glowText 3s infinite alternate;">ALGEBRA QUEST</h1>
+                <p style="font-size:1.5em; color:#636e72;">Restore the Balance of the Universe</p>
                 <hr style="width:50%; margin:30px auto; border:1px solid #ddd;">
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px;">
-                <div>
-                    <h3>🎯 Purpose</h3>
-                    <p>This platform is designed to help you master the fundamentals of Algebra through interactive challenges.</p>
-                    <h3>🧠 The 5E Model</h3>
-                    <ul style="line-height:1.8;">
-                        <li><strong>Engage:</strong> Hook your interest with a game.</li>
-                        <li><strong>Explore:</strong> Hands-on activities to discover rules.</li>
-                        <li><strong>Explain:</strong> Detailed videos and definitions.</li>
-                        <li><strong>Elaborate:</strong> Harder problems and real-world use.</li>
-                        <li><strong>Evaluate:</strong> A final quiz to test your skill.</li>
-                    </ul>
-                </div>
-                <div style="background:#f8f9fa; padding:30px; border-radius:20px; border-left:5px solid var(--accent);">
-                    <h3>🚀 Your Mission</h3>
-                    <p>Complete all 4 Levels to become an Algebra Master.</p>
-                    <ul style="list-style:none; padding:0;">
-                        <li style="margin-bottom:10px;"><strong>Level 1:</strong> Anatomy (Parts of expressions)</li>
-                        <li style="margin-bottom:10px;"><strong>Level 2:</strong> Language (Translating English to Math)</li>
-                        <li style="margin-bottom:10px;"><strong>Level 3:</strong> Properties (Rules of the game)</li>
-                        <li style="margin-bottom:10px;"><strong>Level 4:</strong> Solving (Finding the unknown)</li>
-                    </ul>
-                    <button class="btn" style="width:100%" onclick="window.loadLessonIntro(1)">Start Level 1 ➡️</button>
-                </div>
+            
+            <div style="background:#fff; padding:30px; border-radius:20px; box-shadow:0 4px 10px rgba(0,0,0,0.05); margin-bottom:30px;">
+                <h2 style="border:none; text-align:center;">📜 THE PROPHECY</h2>
+                <p>For eons, the realm of <strong>Al-Jabr</strong> existed in perfect harmony, balanced by the Golden Equation. Numbers flowed like rivers, and variables danced in the skies.</p>
+                <p>But the Great Equilibrium was shattered. The <strong>Null Void</strong>—a force of pure chaos—cracked the foundation of logic. The <strong>Unknown Variables</strong> (X, Y, and Z) were scattered across the four dimensions, hiding in shadow.</p>
+                <p>Now, equations are broken, and the world is tilting into disorder. The Order of Equality has summoned you, a promising <strong>Seeker</strong>. Armed with the Codex of Logic, you must travel through the shattered realms, decipher the ancient language, and solve the Ultimate Equation to restore peace.</p>
+                <p style="text-align:center; margin-top:20px; font-style:italic; color:var(--primary);">"The balance must be restored."</p>
+            </div>
+
+            <div style="background:#f8f9fa; padding:30px; border-radius:20px; border-left:5px solid var(--accent);">
+                <h3>🚀 Begin Your Journey</h3>
+                <p>The first realm awaits. Can you identify the parts of the whole?</p>
+                <button class="btn" style="width:100%" onclick="window.loadLessonIntro(1)">Enter Level 1 ➡️</button>
             </div>
         `,
         lessons: {
             1: {
-                intro: `
-                    <h1>Level 1: Anatomy of Algebra</h1>
-                    <div style="background:#e1bee7; padding:20px; border-radius:15px; margin:20px 0;">
-                        <h3>🎯 Objectives (Lesson 1)</h3>
-                        <ul>
-                            <li>Identify the <strong>terms</strong> in an algebraic expression.</li>
-                            <li>Distinguish between <strong>variables</strong>, <strong>constants</strong>, and <strong>numerical coefficients</strong>.</li>
-                            <li>Determine the number of terms in an expression.</li>
-                        </ul>
-                    </div>
-                    <button class="btn" onclick="window.startLesson(1)">Enter the Lab ➡️</button>
-                `,
-                explain: `
-                    <h2>📚 Explain: The Anatomy Charts</h2>
-                    <div class="video-container"><iframe src="https://www.youtube.com/embed/_90sfL5XM_Q" allowfullscreen></iframe></div>
-                    <h3>1. Terms</h3>
-                    <p>An algebraic expression is built from parts called <strong>terms</strong>. A term can be a number, a variable, or a product of both. Terms are separated by <span class="math-text">+</span> or <span class="math-text">-</span> signs. The sign belongs to the term immediately to its <em>left</em>.</p>
-                    <h3>2. Variables</h3>
-                    <p>A <strong>variable</strong> is a symbol (usually a letter like x, y, a, b) that represents an unknown or changeable value.</p>
-                    <h3>3. Constants</h3>
-                    <p>A <strong>constant</strong> is a number on its own. Its value never changes because it is not multiplied by a variable.</p>
-                    <h3>4. Coefficients</h3>
-                    <p>The <strong>numerical coefficient</strong> is the number multiplied by the variable.</p>
-                    <div style="background:#fff3cd; padding:15px; border-radius:10px; border-left:5px solid #ffc107;">
-                        <strong>⚠️ The Invisible 1 Rule:</strong> If a variable has no number (e.g., <span class="math-text">x</span>), the coefficient is <strong>1</strong>. If it is <span class="math-text">-x</span>, the coefficient is <strong>-1</strong>.
-                    </div>
-                `,
-                elaborate: `
-                    <h2>🚀 Elaborate: Advanced Diagnosis</h2>
-                    <div class="elaborate-box">
-                        <h3>1. The Invisible One</h3>
-                        <p>What is the coefficient of <span class="math-text">y</span> in <span class="math-text">5x + y</span>?</p>
-                        <input type="text" id="l1-ex1" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkExact('l1-ex1','1')">Check</button>
-                    </div>
-                    <div class="elaborate-box">
-                        <h3>2. The Negative Sign</h3>
-                        <p>What is the constant in <span class="math-text">3x - 8</span>?</p>
-                        <input type="text" id="l1-ex2" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkExact('l1-ex2','-8')">Check</button>
-                    </div>
-                    <div class="elaborate-box">
-                        <h3>3. Fraction Disguise</h3>
-                        <p>Identify the coefficient in <span class="math-text">x/2</span> (Enter as decimal 0.5 or fraction 1/2).</p>
-                        <input type="text" id="l1-ex3" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkMulti('l1-ex3',['0.5','1/2'])">Check</button>
-                    </div>
-                    <div class="elaborate-box">
-                        <h3>4. Term Counting</h3>
-                        <p>How many terms in <span class="math-text">2x + 3y - z + 5</span>?</p>
-                        <button class="btn btn-outline" onclick="alert('Correct! The terms are 2x, 3y, -z, and 5.')">4 Terms</button>
-                        <button class="btn btn-outline" onclick="alert('Try again. Count items separated by + or -.')">3 Terms</button>
-                    </div>
-                    <div class="elaborate-box">
-                        <h3>5. Geometry Formula</h3>
-                        <p>In <span class="math-text">C = 2πr</span>, is 'r' a Constant or Variable?</p>
-                        <button class="btn btn-outline" onclick="alert('Correct! Radius changes.')">Variable</button>
-                        <button class="btn btn-outline" onclick="alert('Incorrect. The radius can change size.')">Constant</button>
-                    </div>
-                `
+                intro: `<h1>Level 1: Anatomy of Algebra</h1><div style="background:#e1bee7; padding:20px; border-radius:15px; margin:20px 0;"><h3>🎯 Mission Objective</h3><p>Before you can solve the chaos, you must name it. Learn to identify the components of the mathematical language.</p></div><button class="btn" onclick="window.startLesson(1)">Enter the Lab ➡️</button>`,
+                explain: `<h2>📚 Explain: The Anatomy Charts</h2><div class="video-container"><iframe src="https://www.youtube.com/embed/_90sfL5XM_Q" allowfullscreen></iframe></div><h3>1. Terms</h3><p>An algebraic expression is built from parts called <strong>terms</strong>. A term can be a number, a variable, or a product of both. Terms are separated by <span class="math-text">+</span> or <span class="math-text">-</span> signs. The sign belongs to the term immediately to its <em>left</em>.</p><h3>2. Variables</h3><p>A <strong>variable</strong> is a symbol (usually a letter like x, y, a, b) that represents an unknown or changeable value.</p><h3>3. Constants</h3><p>A <strong>constant</strong> is a number on its own. Its value never changes because it is not multiplied by a variable. In <span class="math-text">2x + 9</span>, the 9 is the constant.</p><h3>4. Coefficients</h3><p>The <strong>numerical coefficient</strong> is the number multiplied by the variable.</p><div style="background:#fff3cd; padding:15px; border-radius:10px; border-left:5px solid #ffc107;"><strong>⚠️ The Invisible 1 Rule:</strong> If a variable has no number (e.g., <span class="math-text">x</span>), the coefficient is <strong>1</strong>. If it is <span class="math-text">-x</span>, the coefficient is <strong>-1</strong>.</div>`,
+                elaborate: `<h2>🚀 Elaborate: Advanced Diagnosis</h2><div class="mission-brief"><strong>Mission:</strong> Apply your knowledge to tricky cases. Enter the numeric value or select the correct answer.</div><div class="elaborate-box"><h3>1. The Invisible One</h3><p>What is the coefficient of <span class="math-text">y</span> in <span class="math-text">5x + y</span>?</p><input type="text" id="l1-ex1" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkExact('l1-ex1','1')">Check</button></div><div class="elaborate-box"><h3>2. The Negative Sign</h3><p>What is the constant in <span class="math-text">3x - 8</span>?</p><input type="text" id="l1-ex2" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkExact('l1-ex2','-8')">Check</button></div><div class="elaborate-box"><h3>3. Fraction Disguise</h3><p>Identify the coefficient in <span class="math-text">x/2</span> (Enter as decimal 0.5 or fraction 1/2).</p><input type="text" id="l1-ex3" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkMulti('l1-ex3',['0.5','1/2'])">Check</button></div><div class="elaborate-box"><h3>4. Term Counting</h3><p>How many terms in <span class="math-text">2x + 3y - z + 5</span>?</p><button class="btn btn-outline" onclick="alert('Correct! The terms are 2x, 3y, -z, and 5.')">4 Terms</button><button class="btn btn-outline" onclick="alert('Try again. Count items separated by + or -.')">3 Terms</button></div><div class="elaborate-box"><h3>5. Geometry Formula</h3><p>In <span class="math-text">C = 2πr</span>, is 'r' a Constant or Variable?</p><button class="btn btn-outline" onclick="alert('Correct! Radius changes.')">Variable</button><button class="btn btn-outline" onclick="alert('Incorrect. The radius can change size.')">Constant</button></div>`
             },
             2: {
-                intro: `
-                    <h1>Level 2: Language of Algebra</h1>
-                    <div style="background:#e1bee7; padding:20px; border-radius:15px; margin:20px 0;">
-                        <h3>🎯 Objectives (Lesson 2)</h3>
-                        <ul>
-                            <li>Differentiate between <strong>algebraic expressions</strong> and <strong>equations</strong>.</li>
-                            <li>Translate verbal phrases into mathematical expressions.</li>
-                            <li>Identify and correct use of inequality symbols ($<, >, \le, \ge, \ne$).</li>
-                        </ul>
-                    </div>
-                    <button class="btn" onclick="window.startLesson(2)">Start Translating ➡️</button>
-                `,
-                explain: `
-                    <h2>📚 Explain: Translation Rules</h2>
-                    <div class="video-container"><iframe src="https://www.youtube.com/embed/Xm8nQm1KKuE" allowfullscreen></iframe></div>
-                    <h3>1. Expression vs. Equation</h3>
-                    <p><strong>Expression:</strong> A phrase. NO equal sign (e.g., <span class="math-text">3x + 5</span>).</p>
-                    <p><strong>Equation:</strong> A complete sentence. MUST have an equal sign (e.g., <span class="math-text">3x + 5 = 10</span>).</p>
-                    <h3>2. The "Switch Words"</h3>
-                    <p>Phrases like <strong>"Less than"</strong> and <strong>"Subtracted from"</strong> require you to FLIP the order.</p>
-                    <ul><li>"5 less than x" &rarr; <span class="math-text">x - 5</span></li></ul>
-                    <h3>3. The 5 Inequality Symbols</h3>
-                    <ul>
-                        <li><span class="math-text">&lt;</span> <strong>Is less than:</strong> Smaller.</li>
-                        <li><span class="math-text">&gt;</span> <strong>Is greater than:</strong> Larger.</li>
-                        <li><span class="math-text">&le;</span> <strong>Is less than or equal to:</strong> (At most, Maximum).</li>
-                        <li><span class="math-text">&ge;</span> <strong>Is greater than or equal to:</strong> (At least, Minimum).</li>
-                        <li><span class="math-text">&ne;</span> <strong>Is not equal to:</strong> Different values.</li>
-                    </ul>
-                `,
-                elaborate: `
-                    <h2>🚀 Elaborate: 5 Translation Challenges</h2>
-                    <div class="elaborate-box"><h3>1. The Switch Word Trap</h3><p>Translate: "10 subtracted from x"</p><input type="text" id="l2-ex1" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkExact('l2-ex1','x-10')">Check</button></div>
-                    <div class="elaborate-box"><h3>2. The "Is" Rule</h3><p>Translate: "Twice a number is 14"</p><input type="text" id="l2-ex2" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkExact('l2-ex2','2x=14')">Check</button></div>
-                    <div class="elaborate-box"><h3>3. Inequality: Capacity</h3><p>The elevator holds <strong>at most</strong> 10 people. (Use p).</p><button class="btn btn-outline" onclick="alert('Correct! p ≤ 10')">p ≤ 10</button> <button class="btn btn-outline" onclick="alert('Wrong. < excludes 10.')">p < 10</button></div>
-                    <div class="elaborate-box"><h3>4. Inequality: Age</h3><p>You must be <strong>at least</strong> 18 to vote. (Use a).</p><input type="text" id="l2-ex4" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkMulti('l2-ex4',['a>=18','a=>18'])">Check</button></div>
-                    <div class="elaborate-box"><h3>5. Complex Sentence</h3><p>"Five more than the product of 3 and a number."</p><button class="btn btn-outline" onclick="alert('Correct! 3x + 5')">Reveal Answer</button></div>
-                `
+                intro: `<h1>Level 2: Language of Algebra</h1><div style="background:#e1bee7; padding:20px; border-radius:15px; margin:20px 0;"><h3>🎯 Mission Objective</h3><p>The variables speak a strange tongue. You must learn to translate their words into mathematical symbols.</p></div><button class="btn" onclick="window.startLesson(2)">Start Translating ➡️</button>`,
+                explain: `<h2>📚 Explain: Translation Rules</h2><div class="video-container"><iframe src="https://www.youtube.com/embed/Xm8nQm1KKuE" allowfullscreen></iframe></div><h3>1. Expression vs. Equation</h3><p><strong>Expression:</strong> A phrase. NO equal sign (e.g., <span class="math-text">3x + 5</span>).</p><p><strong>Equation:</strong> A complete sentence. MUST have an equal sign (e.g., <span class="math-text">3x + 5 = 10</span>).</p><h3>2. The "Switch Words"</h3><p>Phrases like <strong>"Less than"</strong> and <strong>"Subtracted from"</strong> require you to FLIP the order.</p><ul><li>"5 less than x" &rarr; <span class="math-text">x - 5</span></li></ul><h3>3. The 5 Inequality Symbols</h3><ul><li><span class="math-text">&lt;</span> <strong>Is less than:</strong> Smaller.</li><li><span class="math-text">&gt;</span> <strong>Is greater than:</strong> Larger.</li><li><span class="math-text">&le;</span> <strong>Is less than or equal to:</strong> (At most, Maximum).</li><li><span class="math-text">&ge;</span> <strong>Is greater than or equal to:</strong> (At least, Minimum).</li><li><span class="math-text">&ne;</span> <strong>Is not equal to:</strong> Different values.</li></ul>`,
+                elaborate: `<h2>🚀 Elaborate: 5 Translation Challenges</h2><div class="mission-brief"><strong>Mission:</strong> Translate these scenarios carefully. Watch out for 'switch words' and inequality keywords.</div><div class="elaborate-box"><h3>1. The Switch Word Trap</h3><p>Translate: "10 subtracted from x"</p><input type="text" id="l2-ex1" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkExact('l2-ex1','x-10')">Check</button></div><div class="elaborate-box"><h3>2. The "Is" Rule</h3><p>Translate: "Twice a number is 14"</p><input type="text" id="l2-ex2" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkExact('l2-ex2','2x=14')">Check</button></div><div class="elaborate-box"><h3>3. Inequality: Capacity</h3><p>The elevator holds <strong>at most</strong> 10 people. (Use p).</p><button class="btn btn-outline" onclick="alert('Correct! p ≤ 10')">p ≤ 10</button> <button class="btn btn-outline" onclick="alert('Wrong. < excludes 10.')">p < 10</button></div><div class="elaborate-box"><h3>4. Inequality: Age</h3><p>You must be <strong>at least</strong> 18 to vote. (Use a).</p><input type="text" id="l2-ex4" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkMulti('l2-ex4',['a>=18','a=>18'])">Check</button></div><div class="elaborate-box"><h3>5. Complex Sentence</h3><p>"Five more than the product of 3 and a number."</p><button class="btn btn-outline" onclick="alert('Correct! 3x + 5')">Reveal Answer</button></div>`
             },
             3: {
-                intro: `
-                    <h1>Level 3: Properties of Equality</h1>
-                    <div style="background:#e1bee7; padding:20px; border-radius:15px; margin:20px 0;">
-                        <h3>🎯 Objectives (Lesson 3)</h3>
-                        <ul>
-                            <li>Identify Commutative, Associative, and Distributive Properties.</li>
-                            <li>Apply properties to simplify expressions.</li>
-                        </ul>
-                    </div>
-                    <button class="btn" onclick="window.startLesson(3)">Learn the Laws ➡️</button>
-                `,
-                explain: `
-                    <h2>📚 Explain: The Big Three Properties</h2>
-                    <div class="video-container"><iframe src="https://www.youtube.com/embed/DKC74YKJpNY" allowfullscreen></iframe></div>
-                    <h3>1. Commutative Property (Order)</h3>
-                    <p>Changing the <strong>order</strong> of addition or multiplication does not change the result.</p>
-                    <p><em>Rule:</em> <span class="math-text">a + b = b + a</span></p>
-                    <h3>2. Associative Property (Grouping)</h3>
-                    <p>Changing the <strong>grouping</strong> (parentheses) does not change the result.</p>
-                    <p><em>Rule:</em> <span class="math-text">(a + b) + c = a + (b + c)</span></p>
-                    <h3>3. Distributive Property</h3>
-                    <p>Multiplying a value across a sum inside parentheses.</p>
-                    <p><em>Rule:</em> <span class="math-text">a(b + c) = ab + ac</span></p>
-                    <h3>4. Identity & Inverse</h3>
-                    <p><strong>Identity:</strong> 0 (Add) or 1 (Mult). Leaves value unchanged.</p>
-                    <p><strong>Inverse:</strong> Opposites (-x) or Reciprocals (1/x). Cancels to identity.</p>
-                `,
-                elaborate: `
-                    <h2>🚀 Elaborate: 5 Property Proofs</h2>
-                    <div class="elaborate-box"><h3>1. Simplify using Distributive</h3><p>Simplify <span class="math-text">2(x + 4)</span></p><input type="text" id="l3-ex1" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkExact('l3-ex1','2x+8')">Check</button></div>
-                    <div class="elaborate-box"><h3>2. Identify the Property</h3><p><span class="math-text">5 + 3 = 3 + 5</span></p><button class="btn btn-outline" onclick="alert('Correct! Order changed.')">Commutative</button> <button class="btn btn-outline" onclick="alert('Incorrect.')">Associative</button></div>
-                    <div class="elaborate-box"><h3>3. Justify the Step</h3><p>Step 1: <span class="math-text">3 + (4 + x)</span> -> Step 2: <span class="math-text">(3 + 4) + x</span></p><button class="btn btn-outline" onclick="alert('Correct! Grouping changed.')">Associative</button></div>
-                    <div class="elaborate-box"><h3>4. Identity vs Inverse</h3><p>What number is the Additive Identity?</p><input type="text" id="l3-ex4" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkExact('l3-ex4','0')">Check</button></div>
-                    <div class="elaborate-box"><h3>5. Distributing Negatives</h3><p>Simplify <span class="math-text">-3(x - 2)</span></p><button class="btn btn-outline" onclick="alert('Answer: -3x + 6')">Reveal Answer</button></div>
-                `
+                intro: `<h1>Level 3: Properties of Equality</h1><div style="background:#e1bee7; padding:20px; border-radius:15px; margin:20px 0;"><h3>🎯 Mission Objective</h3><p>To manipulate the fabric of equations, you must master the Laws of the Universe (Properties).</p></div><button class="btn" onclick="window.startLesson(3)">Learn the Laws ➡️</button>`,
+                explain: `<h2>📚 Explain: The Big Three Properties</h2><div class="video-container"><iframe src="https://www.youtube.com/embed/DKC74YKJpNY" allowfullscreen></iframe></div><h3>1. Commutative Property (Order)</h3><p>Changing the <strong>order</strong> of addition or multiplication does not change the result.</p><p><em>Rule:</em> <span class="math-text">a + b = b + a</span></p><h3>2. Associative Property (Grouping)</h3><p>Changing the <strong>grouping</strong> (parentheses) does not change the result.</p><p><em>Rule:</em> <span class="math-text">(a + b) + c = a + (b + c)</span></p><h3>3. Distributive Property</h3><p>Multiplying a value across a sum inside parentheses.</p><p><em>Rule:</em> <span class="math-text">a(b + c) = ab + ac</span></p><h3>4. Identity & Inverse</h3><p><strong>Identity:</strong> 0 (Add) or 1 (Mult). Leaves value unchanged.</p><p><strong>Inverse:</strong> Opposites (-x) or Reciprocals (1/x). Cancels to identity.</p>`,
+                elaborate: `<h2>🚀 Elaborate: 5 Property Proofs</h2><div class="mission-brief"><strong>Mission:</strong> Justify the mathematical steps using the correct property rule.</div><div class="elaborate-box"><h3>1. Simplify using Distributive</h3><p>Simplify <span class="math-text">2(x + 4)</span></p><input type="text" id="l3-ex1" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkExact('l3-ex1','2x+8')">Check</button></div><div class="elaborate-box"><h3>2. Identify the Property</h3><p><span class="math-text">5 + 3 = 3 + 5</span></p><button class="btn btn-outline" onclick="alert('Correct! Order changed.')">Commutative</button> <button class="btn btn-outline" onclick="alert('Incorrect.')">Associative</button></div><div class="elaborate-box"><h3>3. Justify the Step</h3><p>Step 1: <span class="math-text">3 + (4 + x)</span> -> Step 2: <span class="math-text">(3 + 4) + x</span></p><button class="btn btn-outline" onclick="alert('Correct! Grouping changed.')">Associative</button></div><div class="elaborate-box"><h3>4. Identity vs Inverse</h3><p>What number is the Additive Identity?</p><input type="text" id="l3-ex4" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkExact('l3-ex4','0')">Check</button></div><div class="elaborate-box"><h3>5. Distributing Negatives</h3><p>Simplify <span class="math-text">-3(x - 2)</span></p><button class="btn btn-outline" onclick="alert('Answer: -3x + 6')">Reveal Answer</button></div>`
             },
             4: {
-                intro: `
-                    <h1>Level 4: Solving Equations</h1>
-                    <div style="background:#e1bee7; padding:20px; border-radius:15px; margin:20px 0;">
-                        <h3>🎯 Objectives (Lesson 4)</h3>
-                        <ul>
-                            <li>Solve equations using APE and MPE.</li>
-                            <li>Check solutions.</li>
-                        </ul>
-                    </div>
-                    <button class="btn" onclick="window.startLesson(4)">Start Solving ➡️</button>
-                `,
-                explain: `
-                    <h2>📚 Explain: Rules of Equality</h2>
-                    <div class="video-container"><iframe src="https://www.youtube.com/embed/1nPsm-kL_Qw" allowfullscreen></iframe></div>
-                    <h3>1. The Goal</h3>
-                    <p>Isolate the variable (<span class="math-text">x = ___</span>) using <strong>Inverse Operations</strong>.</p>
-                    <h3>2. Addition Property of Equality (APE)</h3>
-                    <p>Adding/Subtracting the same number to both sides keeps the equation balanced.</p>
-                    <h3>3. Multiplication Property of Equality (MPE)</h3>
-                    <p>Multiplying/Dividing both sides by the same number keeps it balanced.</p>
-                    <h3>4. Two-Step Strategy</h3>
-                    <p>Always undo Addition/Subtraction <strong>FIRST</strong>, then undo Multiplication/Division.</p>
-                `,
-                elaborate: `
-                    <h2>🚀 Elaborate: 5 Solving Missions</h2>
-                    <div class="elaborate-box"><h3>1. One-Step Equation</h3><p>Solve: <span class="math-text">x + 7 = 10</span></p><input type="text" id="l4-ex1" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkExact('l4-ex1','3')">Check</button></div>
-                    <div class="elaborate-box"><h3>2. Error Analysis</h3><p>Problem: <span class="math-text">3x = 12</span>. Student says x = 9. Error?</p><button class="btn btn-outline" onclick="alert('Correct! They subtracted instead of dividing.')">Subtracted</button> <button class="btn btn-outline" onclick="alert('Incorrect.')">Added</button></div>
-                    <div class="elaborate-box"><h3>3. Two-Step Equation</h3><p>Solve: <span class="math-text">2x + 1 = 11</span></p><input type="text" id="l4-ex3" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkExact('l4-ex3','5')">Check</button></div>
-                    <div class="elaborate-box"><h3>4. Negative Variable</h3><p>Solve: <span class="math-text">-x = 5</span></p><input type="text" id="l4-ex4" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkExact('l4-ex4','-5')">Check</button></div>
-                    <div class="elaborate-box"><h3>5. Checking Solutions</h3><p>Is x=4 a solution for <span class="math-text">3x - 2 = 10</span>?</p><button class="btn btn-outline" onclick="alert('Correct! 12-2 = 10.')">Yes</button> <button class="btn btn-outline" onclick="alert('Incorrect.')">No</button></div>
-                `
+                intro: `<h1>Level 4: Solving Equations</h1><div style="background:#e1bee7; padding:20px; border-radius:15px; margin:20px 0;"><h3>🎯 Mission Objective</h3><p>The final test. You must isolate the Unknown Variable and restore balance to the scale.</p></div><button class="btn" onclick="window.startLesson(4)">Start Solving ➡️</button>`,
+                explain: `<h2>📚 Explain: Rules of Equality</h2><div class="video-container"><iframe src="https://www.youtube.com/embed/1nPsm-kL_Qw" allowfullscreen></iframe></div><h3>1. The Goal</h3><p>Isolate the variable (<span class="math-text">x = ___</span>) using <strong>Inverse Operations</strong>.</p><h3>2. Addition Property of Equality (APE)</h3><p>Adding/Subtracting the same number to both sides keeps the equation balanced.</p><h3>3. Multiplication Property of Equality (MPE)</h3><p>Multiplying/Dividing both sides by the same number keeps it balanced.</p><h3>4. Two-Step Strategy</h3><p>Always undo Addition/Subtraction <strong>FIRST</strong>, then undo Multiplication/Division.</p>`,
+                elaborate: `<h2>🚀 Elaborate: 5 Solving Missions</h2><div class="mission-brief"><strong>Mission:</strong> Find the value of x. Remember: Undo Addition first, then Multiplication.</div><div class="elaborate-box"><h3>1. One-Step Equation</h3><p>Solve: <span class="math-text">x + 7 = 10</span></p><input type="text" id="l4-ex1" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkExact('l4-ex1','3')">Check</button></div><div class="elaborate-box"><h3>2. Error Analysis</h3><p>Problem: <span class="math-text">3x = 12</span>. Student says x = 9. Error?</p><button class="btn btn-outline" onclick="alert('Correct! They subtracted instead of dividing.')">Subtracted</button> <button class="btn btn-outline" onclick="alert('Incorrect.')">Added</button></div><div class="elaborate-box"><h3>3. Two-Step Equation</h3><p>Solve: <span class="math-text">2x + 1 = 11</span></p><input type="text" id="l4-ex3" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkExact('l4-ex3','5')">Check</button></div><div class="elaborate-box"><h3>4. Negative Variable</h3><p>Solve: <span class="math-text">-x = 5</span></p><input type="text" id="l4-ex4" class="elaborate-input"> <button class="btn btn-outline" onclick="window.checkExact('l4-ex4','-5')">Check</button></div><div class="elaborate-box"><h3>5. Checking Solutions</h3><p>Is x=4 a solution for <span class="math-text">3x - 2 = 10</span>?</p><button class="btn btn-outline" onclick="alert('Correct! 12-2 = 10.')">Yes</button> <button class="btn btn-outline" onclick="alert('Incorrect.')">No</button></div>`
             }
         },
         games: {
-            l1_engage: { type: 'select', title: "Word Hunter", desc: "<strong>Mission:</strong> Identify the correct part of speech. The word is hidden in the sentence—click the right one!",
-                rounds: [
-                    { q: "Noun (The object/thing)", parts: ["The", "fast", "dog"], correct: "dog" },
-                    { q: "Adjective (The description)", parts: ["The", "blue", "car"], correct: "blue" },
-                    { q: "Verb (The action)", parts: ["Birds", "fly", "high"], correct: "fly" },
-                    { q: "Number", parts: ["Five", "cats", "sleep"], correct: "Five" },
-                    { q: "Variable (The letter)", parts: ["x", "+", "5"], correct: "x" }
-                ]
-            },
-            l1_explore: { type: 'clicker', title: "Algebra Autopsy", desc: "<strong>Mission:</strong> You are the surgeon. Click the specific organ (math part) requested.",
-                rounds: [
-                    { task: "Click the Coefficient", expr: "4x - 9", parts: ["4", "x", "- 9"], ans: "4" },
-                    { task: "Click the Variable", expr: "3y + 2", parts: ["3", "y", "+ 2"], ans: "y" },
-                    { task: "Click the Constant", expr: "a - 5", parts: ["a", "- 5"], ans: "- 5" },
-                    { task: "Click the Coefficient", expr: "-x + 10", parts: ["-", "x", "+ 10"], ans: "-" },
-                    { task: "Click the Constant", expr: "2πr", parts: ["2π", "r"], ans: "2π" }
-                ]
-            },
-            l2_engage: { type: 'speed', title: "Symbol Sniper", desc: "<strong>Mission:</strong> Identify the correct math symbol for the phrase.",
-                rounds: [
-                    { q: "Increased by", opts: ["+", "-", "*"], a: "+" },
-                    { q: "Product of", opts: ["•", "÷", "+"], a: "•" },
-                    { q: "Quotient", opts: ["-", "÷", "="], a: "÷" },
-                    { q: "Is less than", opts: ["<", ">", "="], a: "<" },
-                    { q: "Is at most", opts: ["≥", "≤", "<"], a: "≤" }
-                ]
-            },
-            l2_explore: { type: 'builder', title: "Expression Builder", desc: "<strong>Mission:</strong> Click the blocks in order to build the correct math translation.",
-                rounds: [
-                    { q: "Sum of x and 5", blocks: ["5", "+", "x"], ans: "x+5" },
-                    { q: "10 decreased by y", blocks: ["y", "10", "-"], ans: "10-y" },
-                    { q: "5 less than x (Switch!)", blocks: ["-", "5", "x"], ans: "x-5" },
-                    { q: "Twice a number", blocks: ["x", "2"], ans: "2x" },
-                    { q: "10 subtracted from z", blocks: ["z", "10", "-"], ans: "z-10" }
-                ]
-            },
-            l3_engage: { type: 'truth', title: "Truth Detector", desc: "<strong>Mission:</strong> Determine if the math statement is True or False.",
-                rounds: [
-                    { q: "5 + 3 = 3 + 5", a: "True" },
-                    { q: "5 - 3 = 3 - 5", a: "False" },
-                    { q: "2(3) = 3(2)", a: "True" },
-                    { q: "10 ÷ 2 = 2 ÷ 10", a: "False" },
-                    { q: "(1+2)+3 = 1+(2+3)", a: "True" }
-                ]
-            },
-            l3_explore: { type: 'sort', title: "Property Sorter", desc: "<strong>Mission:</strong> Identify which property rule is being used.",
-                rounds: [
-                    { q: "a + b = b + a", ans: "Commutative" },
-                    { q: "3(x + 2) = 3x + 6", ans: "Distributive" },
-                    { q: "(a+b)+c = a+(b+c)", ans: "Associative" },
-                    { q: "x + 0 = x", ans: "Identity" },
-                    { q: "5 + (-5) = 0", ans: "Inverse" }
-                ]
-            },
-            l4_engage: { type: 'balance', title: "Balance Scale", desc: "<strong>Mission:</strong> Predict how to keep the scale balanced.",
-                rounds: [
-                    { q: "We remove 5 from the Left. What must we do to the Right?", opts: ["Subtract 5", "Add 5"], a: "Subtract 5" },
-                    { q: "We double the Left side. What must we do to the Right?", opts: ["Multiply by 2", "Divide by 2"], a: "Multiply by 2" },
-                    { q: "We add 10 to the Right. What must we do to the Left?", opts: ["Add 10", "Subtract 10"], a: "Add 10" },
-                    { q: "We cut the Left side in half. What must we do to the Right?", opts: ["Divide by 2", "Multiply by 2"], a: "Divide by 2" },
-                    { q: "What is the goal of solving equations?", opts: ["Isolate Variable", "Remove Variable"], a: "Isolate Variable" }
-                ]
-            },
-            l4_explore: { type: 'wizard', title: "Solution Wizard", desc: "<strong>Mission:</strong> Choose the correct next step to solve the equation.",
-                rounds: [
-                    { q: "Solve x + 5 = 12", opts: ["Add 5", "Subtract 5"], a: "Subtract 5" },
-                    { q: "Solve 3x = 15", opts: ["Divide by 3", "Multiply by 3"], a: "Divide by 3" },
-                    { q: "Solve x/4 = 2", opts: ["Multiply by 4", "Divide by 4"], a: "Multiply by 4" },
-                    { q: "Solve 2x - 1 = 9 (Step 1)", opts: ["Add 1", "Divide by 2"], a: "Add 1" },
-                    { q: "Solve 2x = 10 (Step 2)", opts: ["Divide by 2", "Subtract 2"], a: "Divide by 2" }
-                ]
-            }
+            l1_engage: { type: 'select', title: "Word Hunter", desc: "<strong>Mission:</strong> Read the sentence below. Find the specific part of speech requested (e.g., Noun, Verb) and click on it. Think carefully!", rounds: [
+                { q: "Noun (Object)", sentence: "The fast dog runs", correct: "dog" },
+                { q: "Adjective (Description)", sentence: "The blue car stops", correct: "blue" },
+                { q: "Verb (Action)", sentence: "Birds fly high", correct: "fly" },
+                { q: "Number", sentence: "Five cats sleep", correct: "Five" },
+                { q: "Variable (Unknown)", sentence: "x + 5 = 10", correct: "x" }
+            ]},
+            l1_explore: { type: 'clicker', title: "Algebra Autopsy", desc: "<strong>Mission:</strong> You are the surgeon. Click the specific organ (math part) requested.", rounds: [
+                { task: "Click Coefficient", expr: "4x - 9", parts: ["4", "x", "- 9"], ans: "4" },
+                { task: "Click Variable", expr: "3y + 2", parts: ["3", "y", "+ 2"], ans: "y" },
+                { task: "Click Constant", expr: "a - 5", parts: ["a", "- 5"], ans: "- 5" },
+                { task: "Click Coefficient", expr: "-x + 10", parts: ["-", "x", "+ 10"], ans: "-" },
+                { task: "Click Constant", expr: "2πr", parts: ["2π", "r"], ans: "2π" }
+            ]},
+            l2_engage: { type: 'speed', title: "Symbol Sniper", desc: "<strong>Mission:</strong> Identify the correct math symbol.", rounds: [ { q: "Increased by", opts: ["+", "-", "*"], a: "+" }, { q: "Product of", opts: ["•", "÷", "+"], a: "•" }, { q: "Quotient", opts: ["-", "÷", "="], a: "÷" }, { q: "Is less than", opts: ["<", ">", "="], a: "<" }, { q: "Is at most", opts: ["≥", "≤", "<"], a: "≤" } ]},
+            l2_explore: { type: 'builder', title: "Builder", desc: "<strong>Mission:</strong> Build the expression in order.", rounds: [ { q: "Sum of x and 5", blocks: ["5", "+", "x"], ans: "x+5" }, { q: "10 decreased by y", blocks: ["y", "10", "-"], ans: "10-y" }, { q: "5 less than x", blocks: ["-", "5", "x"], ans: "x-5" }, { q: "Twice a number", blocks: ["x", "2"], ans: "2x" }, { q: "10 subtracted from z", blocks: ["z", "10", "-"], ans: "z-10" } ]},
+            l3_engage: { type: 'truth', title: "Truth Detector", desc: "<strong>Mission:</strong> True or False?", rounds: [ { q: "5 + 3 = 3 + 5", a: "True" }, { q: "5 - 3 = 3 - 5", a: "False" }, { q: "2(3) = 3(2)", a: "True" }, { q: "10 ÷ 2 = 2 ÷ 10", a: "False" }, { q: "(1+2)+3 = 1+(2+3)", a: "True" } ]},
+            l3_explore: { type: 'sort', title: "Sorter", desc: "<strong>Mission:</strong> Identify the Property.", rounds: [ { q: "a + b = b + a", ans: "Commutative" }, { q: "3(x + 2) = 3x + 6", ans: "Distributive" }, { q: "(a+b)+c = a+(b+c)", ans: "Associative" }, { q: "x + 0 = x", ans: "Identity" }, { q: "5 + (-5) = 0", ans: "Inverse" } ]},
+            l4_engage: { type: 'balance', title: "Balance Scale", desc: "<strong>Mission:</strong> The scale is out of balance! Select the action needed on the RIGHT to equal the action taken on the LEFT.", rounds: [ 
+                { q: "We ADDED 3 blocks to the Left. What must we do to the Right?", opts: ["Subtract 3", "Add 3"], a: "Add 3", leftW: [1,1,1,1,1,1], rightW: [1,1,1] }, 
+                { q: "We REMOVED 2 blocks from the Left. What must we do to the Right?", opts: ["Subtract 2", "Add 2"], a: "Subtract 2", leftW: [1,1], rightW: [1,1,1,1] }, 
+                { q: "We DOUBLED the Left side. What must we do to the Right?", opts: ["Multiply by 2", "Divide by 2"], a: "Multiply by 2", leftW: [1,1,1,1,1,1,1,1], rightW: [1,1,1,1] }, 
+                { q: "We CUT the Left side in HALF. What must we do to the Right?", opts: ["Divide by 2", "Multiply by 2"], a: "Divide by 2", leftW: [1,1], rightW: [1,1,1,1] }, 
+                { q: "To solve an equation, we perform the ____ operation.", opts: ["Inverse", "Same"], a: "Inverse", leftW: [1,1,1], rightW: [1,1,1] },
+                // EXTRA QUESTIONS FOR RANDOMIZATION
+                { q: "We Added 5 to the Left. How do we balance the Right?", opts: ["Add 5", "Subtract 5"], a: "Add 5", leftW: [1,1,1,1,1], rightW: [] },
+                { q: "We Multiplied the Left by 3. What do we do to the Right?", opts: ["Multiply by 3", "Divide by 3"], a: "Multiply by 3", leftW: [1,1,1], rightW: [1] },
+                { q: "We Divided the Left by 4. What do we do to the Right?", opts: ["Divide by 4", "Multiply by 4"], a: "Divide by 4", leftW: [1], rightW: [1,1,1,1] }
+            ]},
+            l4_explore: { type: 'wizard', title: "Wizard", desc: "<strong>Mission:</strong> Choose the correct next step.", rounds: [ 
+                { q: "Solve x + 5 = 12", opts: ["Add 5", "Subtract 5"], a: "Subtract 5" }, 
+                { q: "Solve 3x = 15", opts: ["Divide 3", "Multiply 3"], a: "Divide 3" }, 
+                { q: "Solve x/4 = 2", opts: ["Multiply 4", "Divide 4"], a: "Multiply 4" }, 
+                { q: "2x - 1 = 9 (Step 1)", opts: ["Add 1", "Divide 2"], a: "Add 1" }, 
+                { q: "2x = 10 (Step 2)", opts: ["Divide 2", "Subtract 2"], a: "Divide 2" },
+                // EXTRA QUESTIONS FOR RANDOMIZATION
+                { q: "Solve x - 7 = 3", opts: ["Add 7", "Subtract 7"], a: "Add 7" },
+                { q: "Solve 5x = 20", opts: ["Divide 5", "Multiply 5"], a: "Divide 5" },
+                { q: "Solve x/2 = 10", opts: ["Multiply 2", "Divide 2"], a: "Multiply 2" }
+            ]}
         },
         quizzes: {
             1: [
-                {q:"How many terms are in <span class='math-text'>5x - 2y + 8</span>?", opts:["Two","Three","Four","Five"], a:1},
-                {q:"Identify the constant in <span class='math-text'>4m - 12</span>.", opts:["4","12","-12","m"], a:2},
-                {q:"What is the coefficient of <span class='math-text'>-x</span>?", opts:["1","-1","0","x"], a:1},
-                {q:"Which is the variable in <span class='math-text'>3a + 5</span>?", opts:["a","3","5","None"], a:0},
-                {q:"What is the coefficient of <span class='math-text'>y/4</span>?", opts:["4y","1/4","0.4","4"], a:1},
-                {q:"How many terms in <span class='math-text'>2x + y - z + 5</span>?", opts:["Three","Four","Five","Six"], a:1},
-                {q:"What is the constant in the term <span class='math-text'>x</span>?", opts:["0","1","There is no constant","x"], a:2},
-                {q:"What is the coefficient in <span class='math-text'>x</span>?", opts:["1","0","x","-1"], a:0},
-                {q:"Identify the variables in <span class='math-text'>2ab + c</span>.", opts:["a and b","a, b, and c","c only","a only"], a:1},
-                {q:"Terms are separated by which symbols?", opts:["Plus and Minus","Multiply and Divide","Equals","Parentheses"], a:0}
+                {q:"How many terms are there in the expression <span class='math-text'>5x - 2y + 8</span>?", opts:["Two","Three","Four","Five"], a:1}, 
+                {q:"Which number represents the constant in the expression <span class='math-text'>4m - 12</span>?", opts:["4","12","-12","m"], a:2}, 
+                {q:"What is the numerical coefficient of the term <span class='math-text'>-x</span>?", opts:["1","-1","0","x"], a:1}, 
+                {q:"Which of the following represents the variable in the expression <span class='math-text'>3a + 5</span>?", opts:["a","3","5","None"], a:0}, 
+                {q:"What is the coefficient of the term <span class='math-text'>y/4</span>?", opts:["4y","1/4","0.4","4"], a:1},
+                {q:"How many terms are in the expression <span class='math-text'>2x + y - z + 5</span>?", opts:["Three","Four","Five","Six"], a:1}, 
+                {q:"What is the constant in the single term <span class='math-text'>x</span>?", opts:["0","1","None","x"], a:2}, 
+                {q:"What is the invisible coefficient of the variable <span class='math-text'>x</span>?", opts:["1","0","x","-1"], a:0}, 
+                {q:"Identify the variables in the expression <span class='math-text'>2ab + c</span>.", opts:["a,b","a,b,c","c","a"], a:1}, 
+                {q:"Algebraic terms are separated by which symbols?", opts:["Plus and Minus","Multiply and Divide","Equals","Parentheses"], a:0}
             ],
             2: [
-                {q:"Is <span class='math-text'>2x+5</span> an Algebraic Expression or an Equation?", opts:["Expression","Equation","Inequality","Formula"], a:0},
-                {q:"Is <span class='math-text'>x=10</span> an Algebraic Expression or an Equation?", opts:["Expression","Equation","Term","Variable"], a:1},
-                {q:"Translate: 'The sum of x and 8'", opts:["x - 8","x + 8","8x","x/8"], a:1},
-                {q:"Translate: '5 less than y'", opts:["5 - y","y - 5","5 < y","y < 5"], a:1},
-                {q:"Which symbol represents 'At most'?", opts:["<",">","≤","≥"], a:2},
-                {q:"Which symbol represents 'Minimum'?", opts:[">","≥","≤","<"], a:1},
-                {q:"What mathematical operation does 'Product' mean?", opts:["Addition","Multiplication","Subtraction","Division"], a:1},
-                {q:"What mathematical symbol does 'Is' represent?", opts:["=","<",">","≤"], a:0},
-                {q:"Translate: 'Twice x'", opts:["x + 2","2x","x^2","x/2"], a:1},
-                {q:"Translate: '10 subtracted from z'", opts:["10 - z","z - 10","z < 10","10 < z"], a:1}
+                {q:"Is <span class='math-text'>2x + 5</span> classified as an Algebraic Expression or an Equation?", opts:["Expression","Equation","Inequality","Formula"], a:0}, 
+                {q:"Is <span class='math-text'>x = 10</span> classified as an Algebraic Expression or an Equation?", opts:["Expression","Equation","Term","Var"], a:1}, 
+                {q:"Which expression correctly translates 'The sum of x and 8'?", opts:["x-8","x+8","8x","x/8"], a:1}, 
+                {q:"Which expression correctly translates '5 less than y'?", opts:["5-y","y-5","5<y","y<5"], a:1}, 
+                {q:"Which mathematical symbol represents the phrase 'At most'?", opts:["<",">","≤","≥"], a:2},
+                {q:"Which mathematical symbol represents the phrase 'Minimum'?", opts:[">","≥","≤","<"], a:1}, 
+                {q:"In algebra, the word 'Product' refers to which operation?", opts:["Add","Mult","Sub","Div"], a:1}, 
+                {q:"In algebra, the word 'Is' translates to which symbol?", opts:["=","<",">","≤"], a:0}, 
+                {q:"Which expression represents 'Twice x'?", opts:["x+2","2x","x^2","x/2"], a:1}, 
+                {q:"Which expression represents '10 subtracted from z'?", opts:["10-z","z-10","z<10","10<z"], a:1}
             ],
             3: [
-                {q:"Identify the property: <span class='math-text'>a + b = b + a</span>", opts:["Commutative Property","Associative Property","Distributive Property","Identity Property"], a:0},
-                {q:"Identify the property: <span class='math-text'>3(x + 2) = 3x + 6</span>", opts:["Distributive Property","Identity Property","Associative Property","Commutative Property"], a:0},
-                {q:"Identify the property: <span class='math-text'>(1 + 2) + 3 = 1 + (2 + 3)</span>", opts:["Associative Property","Commutative Property","Inverse Property","Identity Property"], a:0},
-                {q:"Identify the property: <span class='math-text'>x + 0 = x</span>", opts:["Identity Property","Inverse Property","Associative Property","Commutative Property"], a:0},
-                {q:"Identify the property: <span class='math-text'>5 + (-5) = 0</span>", opts:["Identity Property","Inverse Property","Distributive Property","Associative Property"], a:1},
-                {q:"Identify the property: <span class='math-text'>1 * x = x</span>", opts:["Identity Property","Commutative Property","Inverse Property","Associative Property"], a:0},
-                {q:"Does order matter in Subtraction?", opts:["Yes","No","Sometimes","Only with negatives"], a:1},
-                {q:"Simplify <span class='math-text'>2(x + 3)</span>", opts:["2x + 3","2x + 6","x + 6","2x + 5"], a:1},
-                {q:"Identify the property: <span class='math-text'>xy = yx</span>", opts:["Commutative Property","Associative Property","Inverse Property","Identity Property"], a:0},
-                {q:"Simplify <span class='math-text'>-(x - 2)</span>", opts:["-x - 2","-x + 2","x - 2","x + 2"], a:1}
+                {q:"Which property allows you to say that <span class='math-text'>a + b = b + a</span>?", opts:["Commutative","Associative","Distributive","Identity"], a:0}, 
+                {q:"Which property is shown by the equation <span class='math-text'>3(x + 2) = 3x + 6</span>?", opts:["Distributive","Identity","Associative","Commutative"], a:0}, 
+                {q:"Which property allows you to regroup <span class='math-text'>(1 + 2) + 3</span> into <span class='math-text'>1 + (2 + 3)</span>?", opts:["Associative","Commutative","Inverse","Identity"], a:0}, 
+                {q:"The statement <span class='math-text'>x + 0 = x</span> demonstrates which property?", opts:["Identity","Inverse","Associative","Commutative"], a:0}, 
+                {q:"The statement <span class='math-text'>5 + (-5) = 0</span> demonstrates which property?", opts:["Identity","Inverse","Distributive","Associative"], a:1},
+                {q:"The statement <span class='math-text'>1 * x = x</span> demonstrates which property?", opts:["Identity","Commutative","Inverse","Associative"], a:0}, 
+                {q:"Does the order of numbers matter in subtraction?", opts:["Yes","No","Sometimes","Only with negatives"], a:1}, 
+                {q:"What is the simplified form of <span class='math-text'>2(x + 3)</span>?", opts:["2x + 3","2x + 6","x + 6","2x + 5"], a:1}, 
+                {q:"The statement <span class='math-text'>xy = yx</span> demonstrates which property?", opts:["Commutative","Associative","Inverse","Identity"], a:0}, 
+                {q:"What is the simplified form of <span class='math-text'>-(x - 2)</span>?", opts:["-x - 2","-x + 2","x - 2","x + 2"], a:1}
             ],
             4: [
-                {q:"Solve for x: <span class='math-text'>x + 5 = 12</span>", opts:["7","17","-7","-17"], a:0},
-                {q:"Solve for x: <span class='math-text'>2x = 20</span>", opts:["10","40","2","18"], a:0},
-                {q:"What is the first step for <span class='math-text'>2x - 5 = 11</span>?", opts:["Add 5","Divide by 2","Subtract 11","Multiply by 2"], a:0},
-                {q:"Solve for x: <span class='math-text'>-x = 5</span>", opts:["5","-5","0","1"], a:1},
-                {q:"Which property solves <span class='math-text'>x - 3 = 10</span>?", opts:["Addition Property of Equality","Multiplication Property of Equality","Distributive Property","Associative Property"], a:0},
-                {q:"Which property solves <span class='math-text'>3x = 12</span>?", opts:["Addition Property of Equality","Multiplication Property of Equality","Inverse Property","Identity Property"], a:1},
-                {q:"Solve for x: <span class='math-text'>x / 4 = 2</span>", opts:["2","8","6","-2"], a:1},
-                {q:"Check if x=2 is a solution for <span class='math-text'>3x = 6</span>", opts:["True","False","Maybe","Undefined"], a:0},
-                {q:"Solve for x: <span class='math-text'>2x + 1 = 5</span>", opts:["2","3","4","1"], a:0},
-                {q:"What is the inverse operation of Multiplication?", opts:["Addition","Division","Subtraction","Exponentiation"], a:1}
+                {q:"What is the value of x in the equation <span class='math-text'>x + 5 = 12</span>?", opts:["7","17","-7","-17"], a:0}, 
+                {q:"What is the value of x in the equation <span class='math-text'>2x = 20</span>?", opts:["10","40","2","18"], a:0}, 
+                {q:"What is the first step to solve <span class='math-text'>2x - 5 = 11</span>?", opts:["Add 5","Divide by 2","Subtract 11","Multiply by 2"], a:0}, 
+                {q:"What is the solution for the equation <span class='math-text'>-x = 5</span>?", opts:["5","-5","0","1"], a:1}, 
+                {q:"Which property would you use to solve <span class='math-text'>x - 3 = 10</span>?", opts:["Addition Prop (APE)","Multiplication Prop (MPE)","Distributive","Associative"], a:0},
+                {q:"Which property would you use to solve <span class='math-text'>3x = 12</span>?", opts:["Addition Prop (APE)","Multiplication Prop (MPE)","Inverse","Identity"], a:1}, 
+                {q:"What is the value of x in the equation <span class='math-text'>x / 4 = 2</span>?", opts:["2","8","6","-2"], a:1}, 
+                {q:"Is x = 2 a correct solution for the equation <span class='math-text'>3x = 6</span>?", opts:["True","False","Maybe","Undefined"], a:0}, 
+                {q:"What is the value of x in the equation <span class='math-text'>2x + 1 = 5</span>?", opts:["2","3","4","1"], a:0}, 
+                {q:"What is the inverse operation of Multiplication?", opts:["Addition","Division","Subtraction","Exponents"], a:1}
             ]
         }
     };
 
     /* =========================================
-       ENGINE LOGIC (Attached to Window)
+       CORE ENGINE
        ========================================= */
     window.loadHome = function() {
+        currentView = 'home';
         document.getElementById('phaseNav').classList.remove('visible');
         document.getElementById('contentArea').innerHTML = content.home;
         window.updateSidebar();
+        document.getElementById('progressText').innerText = "Standby";
+        document.getElementById('pBar').style.width = '0%';
+    };
+
+    window.loadStore = function() {
+        currentView = 'store';
+        document.getElementById('phaseNav').classList.remove('visible');
+        
+        // RENDER STORE
+        let html = `<h1>🛒 XP Store</h1><p>Spend your hard-earned XP on visual upgrades.</p>`;
+        html += `<div class="store-grid">`;
+        
+        storeItems.forEach(item => {
+            const isOwned = inventory[item.id];
+            let btnClass = 'btn-buy';
+            let btnText = `Buy for ${item.cost} XP`;
+            let clickAction = `onclick="window.buyItem('${item.id}', ${item.cost})"`;
+            let disabled = '';
+
+            if (isOwned) {
+                if (item.type === 'theme') {
+                    if (item.id === activeTheme) {
+                        btnClass = 'btn-active';
+                        btnText = 'Active';
+                        disabled = 'disabled';
+                        clickAction = '';
+                    } else {
+                        btnClass = 'btn-equip';
+                        btnText = 'Equip';
+                        clickAction = `onclick="window.equipItem('${item.id}')"`;
+                    }
+                } else {
+                    btnClass = 'btn-buy';
+                    btnText = 'Owned';
+                    disabled = 'disabled';
+                }
+            } else {
+                if (xp < item.cost) disabled = 'disabled';
+            }
+
+            let itemClass = isOwned ? `store-item item-owned` : `store-item`;
+
+            html += `
+            <div class="${itemClass}">
+                <div class="store-icon">${item.icon || '🎨'}</div>
+                <h3>${item.name}</h3>
+                <p>${item.desc}</p>
+                <div class="store-price">${item.cost} XP</div>
+                <button class="${btnClass}" ${disabled} ${clickAction}>${btnText}</button>
+            </div>`;
+        });
+        html += `</div>`;
+        
+        document.getElementById('contentArea').innerHTML = html;
+        window.updateSidebar();
+    };
+
+    window.buyItem = function(id, cost) {
+        if(xp >= cost) {
+            xp -= cost;
+            inventory[id] = true;
+            window.addXP(0); // Update display
+            window.loadStore(); // Re-render to show owned state
+            
+            // Auto equip if theme
+            if(id.startsWith('theme')) window.equipItem(id);
+        }
+    };
+
+    window.equipItem = function(id) {
+        if(id.startsWith('theme')) {
+            activeTheme = id; // Set active
+            const item = storeItems.find(i => i.id === id);
+            const root = document.documentElement;
+            root.style.setProperty('--primary', item.colors.primary);
+            root.style.setProperty('--primary-dark', item.colors.dark);
+            root.style.setProperty('--bg-light', item.colors.bg);
+            root.style.setProperty('--accent', item.colors.accent);
+            root.style.setProperty('--secondary', item.colors.sec);
+            alert(`Theme Equipped: ${item.name}`);
+            window.loadStore(); // Re-render to update Active button
+        }
     };
 
     window.loadLessonIntro = function(id) {
         if(id > unlockedLessons) return;
         currentLesson = id;
-        document.getElementById('phaseNav').classList.remove('visible');
+        currentView = 'lesson';
+        
         document.getElementById('contentArea').innerHTML = content.lessons[id].intro;
         window.updateSidebar();
         document.getElementById('pBar').style.width = '0%';
+        document.getElementById('progressText').innerText = "Mission Start";
+
+        // AUTO-RESUME LOGIC
+        if (progress[id].engage) {
+             document.getElementById('phaseNav').classList.add('visible');
+             const phasesList = ['engage', 'explore', 'explain', 'elaborate', 'evaluate'];
+             const btnMap = { engage: 'btn-engage', explore: 'btn-explore', explain: 'btn-explain', elaborate: 'btn-elaborate', evaluate: 'btn-evaluate' };
+             
+             phasesList.forEach((phaseName, index) => {
+                 let btn = document.getElementById(btnMap[phaseName]);
+                 btn.className = 'phase-btn'; // Reset
+                 // Add click handler
+                 btn.onclick = function() { window.setPhase(phaseName); };
+
+                 // Styling logic
+                 if (progress[currentLesson][phaseName]) {
+                     if(progress[currentLesson].complete) btn.classList.add('unlocked', 'done'); 
+                     else btn.classList.add('locked', 'done');
+                 } else {
+                     let prevPhase = index > 0 ? phasesList[index-1] : null;
+                     if (!prevPhase || progress[currentLesson][prevPhase]) {
+                         btn.classList.add('unlocked');
+                     } else {
+                         btn.classList.add('locked');
+                     }
+                 }
+             });
+
+        } else {
+            document.getElementById('phaseNav').classList.remove('visible');
+        }
     };
 
     window.startLesson = function(id) {
@@ -596,15 +673,44 @@
     };
 
     window.setPhase = function(p) {
-        currentPhase = p;
-        const phases = ['engage', 'explore', 'explain', 'elaborate', 'evaluate'];
-        document.getElementById('pBar').style.width = `${(phases.indexOf(p)+1)*20}%`;
+        const phasesList = ['engage', 'explore', 'explain', 'elaborate', 'evaluate'];
+        let targetIndex = phasesList.indexOf(p);
+        
+        if (!progress[currentLesson].complete) {
+            let maxPhase = 0;
+            if(progress[currentLesson].engage) maxPhase = 1;
+            if(progress[currentLesson].explore) maxPhase = 2;
+            if(progress[currentLesson].explain) maxPhase = 3;
+            if(progress[currentLesson].elaborate) maxPhase = 4;
 
-        document.querySelectorAll('.phase-btn').forEach(b => b.classList.remove('active'));
-        document.querySelector(`button[onclick="window.setPhase('${p}')"]`).classList.add('active');
+            if (targetIndex > maxPhase) {
+                alert("Complete the previous phase first!");
+                return;
+            }
+        }
+
+        currentPhase = p;
+        let percent = (targetIndex+1)*20;
+        document.getElementById('pBar').style.width = `${percent}%`;
+        document.getElementById('progressText').innerText = `${percent}% Complete`;
+
+        const btnMap = { engage: 'btn-engage', explore: 'btn-explore', explain: 'btn-explain', elaborate: 'btn-elaborate', evaluate: 'btn-evaluate' };
+        for (let i = 0; i < phasesList.length; i++) {
+            let phaseName = phasesList[i];
+            let btn = document.getElementById(btnMap[phaseName]);
+            btn.className = 'phase-btn'; // Reset
+            btn.onclick = function() { window.setPhase(phaseName); };
+
+            if(phaseName === p) btn.classList.add('active');
+            else if(progress[currentLesson][phaseName]) {
+                if(progress[currentLesson].complete) btn.classList.add('unlocked', 'done'); 
+                else btn.classList.add('locked', 'done');
+            } else if (i > targetIndex) {
+                btn.classList.add('locked');
+            }
+        }
 
         let html = "";
-        
         if(p === 'engage' || p === 'explore') {
             html = `<div id="gameBoard" class="game-board"></div>`; 
             document.getElementById('contentArea').innerHTML = html;
@@ -612,130 +718,192 @@
         } else if(p === 'evaluate') {
             window.renderQuiz();
         } else {
+            // Passive Reading Phases
             html = content.lessons[currentLesson][p];
+            if(!progress[currentLesson][p]) {
+                progress[currentLesson][p] = true;
+                window.addXP(10); 
+            }
             html += `<button class="btn btn-next" onclick="window.nextPhase('${p}')">Next ➡️</button>`;
             document.getElementById('contentArea').innerHTML = html;
         }
     };
 
     window.nextPhase = function(current) {
-        const phases = ['engage', 'explore', 'explain', 'elaborate', 'evaluate'];
-        const idx = phases.indexOf(current);
-        if(idx < 4) window.setPhase(phases[idx+1]);
+        const phasesList = ['engage', 'explore', 'explain', 'elaborate', 'evaluate'];
+        const idx = phasesList.indexOf(current);
+        progress[currentLesson][current] = true;
+        if(idx < 4) window.setPhase(phasesList[idx+1]);
     };
 
     window.updateSidebar = function() {
-        document.querySelectorAll('.nav-btn').forEach((b, i) => {
-            b.classList.remove('active');
-            b.classList.remove('locked');
-            if(i+1 > unlockedLessons && i<4) b.classList.add('locked');
-        });
-        const activeId = document.getElementById('contentArea').innerHTML.includes('Welcome') ? -1 : currentLesson;
-        if(activeId > 0 && activeId <= 4) document.getElementById(`nav-${activeId}`).classList.add('active');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+        if (currentView === 'home') {
+            document.getElementById('nav-home').classList.add('active');
+        } else if (currentView === 'store') {
+            document.getElementById('nav-store').classList.add('active');
+        } else if (currentView === 'lesson') {
+            document.getElementById(`nav-${currentLesson}`).classList.add('active');
+        }
+        
+        for(let i=1; i<=4; i++) {
+            if(progress[i].complete) document.getElementById(`nav-${i}`).classList.add('completed');
+        }
     };
 
-    window.addXP = function(n) { xp += n; document.getElementById('totalXP').innerText = xp; };
+    window.addXP = function(n) { 
+        xp += n; 
+        document.getElementById('totalXP').innerText = xp;
+        
+        let rank = "Novice";
+        if(xp >= 100) rank = "Apprentice";
+        if(xp >= 300) rank = "Scholar";
+        if(xp >= 600) rank = "Grandmaster";
+        if(inventory['badge_genius']) rank += " ⭐"; 
+        document.getElementById('rankTitle').innerText = rank;
+    };
 
     /* =========================================
-       GAME FUNCTIONS
+       GAME FUNCTIONS with RANDOMIZATION & SAFETY
        ========================================= */
     window.initGame = function(type) {
         gameRound = 0; gameScore = 0;
+        let pool = [...content.games[`l${currentLesson}_${type}`].rounds];
+        
+        let shuffledPool = shuffle(pool);
+        activeGameRounds = shuffledPool.slice(0, 5); 
+        
+        activeGameRounds.forEach(round => {
+            if(round.opts && round.opts.length > 0) {
+                round.opts = shuffle(round.opts);
+            }
+        });
+
         window.renderGameRound(type);
     };
 
     window.renderGameRound = function(type) {
-        const data = content.games[`l${currentLesson}_${type}`];
+        const data = content.games[`l${currentLesson}_${type}`]; 
         const board = document.getElementById('gameBoard');
         
-        if(gameRound >= 5) {
-            board.innerHTML = `<div class="game-board"><h2 style='color:var(--success)'>Stage Complete!</h2><p>Score: ${gameScore}/5</p><button class="btn" onclick="window.nextPhase('${type}')">Continue ➡️</button></div>`;
+        if(gameRound >= activeGameRounds.length) { 
+            let earnedXP = 0;
+            if(!progress[currentLesson][type]) {
+                earnedXP = 50; 
+                window.addXP(earnedXP);
+                progress[currentLesson][type] = true;
+            }
+            board.innerHTML = `<div class="game-board"><h2 style='color:var(--success)'>Stage Complete!</h2><p>Score: ${gameScore}/${activeGameRounds.length}</p><p>XP Earned: ${earnedXP}</p><button class="btn" onclick="window.nextPhase('${type}')">Continue ➡️</button></div>`;
             return;
         }
 
-        const round = data.rounds[gameRound];
+        const round = activeGameRounds[gameRound]; 
         let html = `<div class="mission-brief"><strong>MISSION:</strong> ${data.desc}</div><h3>Round ${gameRound+1}/5</h3>`;
 
-        // ENGINE: SELECT (Word Hunter) - No visual cues
         if(data.type === 'select') {
             html += `<h2 style="margin:20px;">Find the <strong>${round.q}</strong></h2>`;
             html += `<div style="font-size:2em; background:white; padding:20px; border-radius:10px;">`;
-            // Split sentence into words and make each a clickable button (neutral style)
-            round.parts.forEach(word => {
-                html += `<span class="highlightable" onclick="window.checkClicker('${word}', '${round.correct}', '${type}')">${word}</span> `;
+            let words = round.sentence.split(' ');
+            words.forEach(word => {
+                let clean = word.replace(/[^a-zA-Z0-9]/g, "");
+                html += `<span class="word-box" onclick="window.checkWordChoice(this, '${clean}', '${round.correct}')">${word}</span> `;
             });
             html += `</div><div id="fb" class="feedback"></div>`;
         }
-        // ENGINE: BALANCE SCALE
-        else if(data.type === 'balance') {
-            html += `<div class="scale-wrapper">
-                        <div class="scale-beam" id="scaleBeam">
-                            <div class="plate-rope-l"></div><div class="plate-rope-r"></div>
-                            <div class="plate plate-l"></div><div class="plate plate-r"></div>
-                        </div>
-                        <div class="scale-stand"></div>
-                        <div class="scale-base"></div>
-                     </div>`;
-            html += `<div style="margin-top:20px;"><strong>${round.q}</strong></div><div>`;
-            round.opts.forEach(o => html += `<button class="btn btn-outline" onclick="window.checkBalance('${o}','${round.a}','${type}')">${o}</button>`);
+        else if(['speed','balance','truth','wizard','sort'].includes(data.type)) {
+            html += `<div class="math-display">${round.text || round.q}</div><div>`;
+            if(data.type === 'balance') {
+                 let lBlocks = round.leftW ? round.leftW.map(w => `<div class='weight-cube'></div>`).join('') : "";
+                 let rBlocks = round.rightW ? round.rightW.map(w => `<div class='weight-cube'></div>`).join('') : "";
+                 let startRotate = -15; 
+                 if(round.leftW && round.rightW && round.leftW.length < round.rightW.length) startRotate = 15;
+                 
+                 html = `<div class="scale-wrapper">
+                            <div class="scale-beam" id="scaleBeam" style="transform: rotate(${startRotate}deg);">
+                                <div class="plate-rope-l"></div><div class="plate-rope-r"></div>
+                                <div class="plate plate-l">${lBlocks}</div>
+                                <div class="plate plate-r">${rBlocks}</div>
+                            </div>
+                            <div class="scale-stand"></div><div class="scale-base"></div>
+                         </div>` + html;
+            }
+            
+            if(data.type === 'sort') {
+                let props = ['Commutative','Associative','Distributive','Identity','Inverse'];
+                props = shuffle(props); 
+                props.forEach(p => {
+                    // SAFETY FILTER HERE for display, compare against raw in checkStd
+                    html += `<button class="btn btn-outline" onclick="window.checkStd('${escapeHtml(p)}','${round.ans}','${type}')">${escapeHtml(p)}</button>`;
+                });
+            } else if (data.type === 'truth') {
+                // True/False don't need escaping, safe literals
+                html += `<button class="btn" style="background:var(--success)" onclick="window.checkStd('True','${round.a}','${type}')">True</button>`;
+                html += `<button class="btn" style="background:var(--error)" onclick="window.checkStd('False','${round.a}','${type}')">False</button>`;
+            } else if (data.type === 'balance') {
+                // APPLY SAFETY FILTER HERE
+                round.opts.forEach(o => html += `<button class="btn btn-outline" onclick="window.checkBalance('${escapeHtml(o)}','${round.a}','${type}')">${escapeHtml(o)}</button>`);
+            } else {
+                // APPLY SAFETY FILTER HERE
+                round.opts ? round.opts.forEach(o => html += `<button class="btn btn-outline" onclick="window.checkStd('${escapeHtml(o)}','${round.a}','${type}')">${escapeHtml(o)}</button>`) : null;
+            }
             html += `</div><div id="fb" class="feedback"></div>`;
         }
-        // ENGINE: CLICKER (Visual Autopsy)
         else if(data.type === 'clicker') {
             html += `<h4>${round.task}</h4><div class="math-display">`;
             round.parts.forEach(p => html += `<span class="highlightable" onclick="window.checkClicker('${p}','${round.ans}','${type}')">${p}</span> `);
             html += `</div><div id="fb" class="feedback"></div>`;
         }
-        // ENGINE: BUILDER
         else if(data.type === 'builder') {
             currentBuilder = "";
             html += `<h4>Make: ${round.q}</h4><div class="math-display" id="buildArea">...</div><div>`;
-            round.blocks.forEach(b => html += `<span class="token" onclick="window.addToBuild('${b}','${round.ans}','${type}')">${b}</span>`);
+            let tokens = shuffle([...round.blocks]);
+            tokens.forEach(b => html += `<span class="token" onclick="window.addToBuild('${b}','${round.ans}','${type}')">${b}</span>`);
             html += `<button class="btn btn-outline" onclick="window.resetBuild()">Reset</button></div><div id="fb" class="feedback"></div>`;
-        }
-        // STANDARD (Speed, Sort, Truth, Wizard)
-        else {
-            html += `<div class="math-display">${round.text || round.q}</div><div>`;
-            if(data.type === 'sort') {
-                ['Commutative','Associative','Distributive','Identity','Inverse'].forEach(p => {
-                    html += `<button class="btn btn-outline" onclick="window.checkStd('${p}','${round.ans}','${type}')">${p}</button>`;
-                });
-            } else if (data.type === 'truth') {
-                html += `<button class="btn" style="background:var(--success)" onclick="window.checkStd('True','${round.a}','${type}')">True</button>`;
-                html += `<button class="btn" style="background:var(--error)" onclick="window.checkStd('False','${round.a}','${type}')">False</button>`;
-            } else {
-                round.opts ? round.opts.forEach(o => html += `<button class="btn btn-outline" onclick="window.checkStd('${o}','${round.a}','${type}')">${o}</button>`) : null;
-            }
-            html += `</div><div id="fb" class="feedback"></div>`;
         }
         board.innerHTML = html;
     };
 
-    // --- CHECKERS ---
+    // --- CHECKERS (FIXED: COMPARE RAW INPUT VS RAW ANSWER) ---
     window.checkStd = function(input, correct, type) {
+        // Browser decodes &lt; back to < when passing to function.
+        // Input is raw. Correct is raw (from data object).
+        // Simply compare.
         if(input === correct) {
-            window.showFb(true, "Correct!"); window.addXP(10); gameScore++;
+            window.showFb(true, "Correct!"); gameScore++;
             setTimeout(() => { gameRound++; window.renderGameRound(type); }, 1000);
         } else { window.showFb(false, "Try Again!"); }
     };
 
+    window.checkWordChoice = function(el, word, correct) {
+        if(word === correct) {
+            el.classList.add('correct');
+            window.showFb(true, "Correct!"); gameScore++;
+            setTimeout(() => { gameRound++; window.renderGameRound('engage'); }, 1000);
+        } else { 
+            el.classList.add('wrong');
+            window.showFb(false, "Try Again!"); 
+        }
+    };
+
     window.checkClicker = function(val, correct, type) {
-        // Strip spaces for loose comparison
         if(val.trim() === correct.trim()) {
-            window.showFb(true, "Correct!"); window.addXP(10); gameScore++;
+            window.showFb(true, "Correct!"); gameScore++;
             setTimeout(() => { gameRound++; window.renderGameRound(type); }, 1000);
-        } else { window.showFb(false, "Incorrect."); }
+        } else { window.showFb(false, "Wrong part!"); }
     };
 
     window.checkBalance = function(input, correct, type) {
         const beam = document.getElementById('scaleBeam');
+        // SAME FIX HERE: Raw comparison
         if(input === correct) {
             beam.style.transform = "rotate(0deg)";
-            window.showFb(true, "Balanced!"); window.addXP(10); gameScore++;
-            setTimeout(() => { gameRound++; window.renderGameRound(type); }, 1000);
+            window.showFb(true, "Balanced!"); gameScore++;
+            setTimeout(() => { gameRound++; window.renderGameRound(type); }, 1500); 
         } else {
-            beam.style.transform = "rotate(15deg)";
-            window.showFb(false, "Unbalanced!");
+            beam.style.transform = "rotate(20deg)";
+            setTimeout(() => { beam.style.transform = "rotate(-15deg)"; }, 200); 
+            window.showFb(false, "Scale Unbalanced!");
         }
     };
 
@@ -743,7 +911,7 @@
         currentBuilder += val;
         document.getElementById('buildArea').innerText = currentBuilder;
         if(currentBuilder === target) {
-            window.showFb(true, "Built!"); window.addXP(10); gameScore++;
+            window.showFb(true, "Built!"); gameScore++;
             setTimeout(() => { gameRound++; window.renderGameRound(type); }, 1000);
         } else if (currentBuilder.length >= target.length) {
             window.showFb(false, "Incorrect. Resetting...");
@@ -760,12 +928,23 @@
     // --- QUIZ LOGIC ---
     window.renderQuiz = function() {
         quizAnswers = new Array(10).fill(null);
-        const qData = content.quizzes[currentLesson];
+        
+        let pool = JSON.parse(JSON.stringify(content.quizzes[currentLesson]));
+        
+        activeQuizQuestions = shuffle(pool).slice(0, 10);
+        
+        activeQuizQuestions.forEach(q => {
+            let correctString = q.opts[q.a]; 
+            q.opts = shuffle(q.opts);        
+            q.a = q.opts.indexOf(correctString); 
+        });
+
         let html = `<div class="content-card"><h2>✅ Mastery Quiz</h2><p>Select answers. Score 7/10 to pass.</p>`;
-        qData.forEach((q, i) => {
+        activeQuizQuestions.forEach((q, i) => {
             let opts = "";
             q.opts.forEach((o, optIdx) => {
-                opts += `<span class="quiz-opt" id="q${i}_o${optIdx}" onclick="window.selectQuizOpt(${i}, ${optIdx})">${o}</span>`;
+                // APPLY SAFETY FILTER HERE TOO
+                opts += `<span class="quiz-opt" id="q${i}_o${optIdx}" onclick="window.selectQuizOpt(${i}, ${optIdx})">${escapeHtml(o)}</span>`;
             });
             html += `<div class="quiz-item"><p><strong>${i+1}.</strong> ${q.q}</p>${opts}</div>`;
         });
@@ -779,20 +958,27 @@
             const el = document.getElementById(`q${qIdx}_o${i}`);
             if(el) el.classList.remove('selected');
         }
-        document.getElementById(`q${qIdx}_o${oIdx}`).classList.add('selected');
+        const target = document.getElementById(`q${qIdx}_o${oIdx}`);
+        if(target) target.classList.add('selected');
     };
 
     window.submitQuiz = function() {
         if(quizAnswers.includes(null)) { alert("Please answer all questions."); return; }
         
-        const correctAnswers = content.quizzes[currentLesson].map(q => q.a);
         let score = 0;
-        quizAnswers.forEach((ans, i) => { if(ans === correctAnswers[i]) score++; });
+        quizAnswers.forEach((ans, i) => { 
+            if(ans === activeQuizQuestions[i].a) score++; 
+        });
 
         let html = `<div class="quiz-score-box"><h1>Score: ${score} / 10</h1>`;
         if(score >= 7) {
-            html += `<h3 style="color:var(--success)">PASSED!</h3><p>Next level unlocked.</p><button class="btn" onclick="window.unlockNext()">Next Level ➡️</button>`;
-            window.addXP(score * 20);
+            html += `<h3 style="color:var(--success)">PASSED!</h3><p>Lesson Complete.</p><button class="btn" onclick="window.unlockNext()">Return to Hub ➡️</button>`;
+            
+            if(!progress[currentLesson].complete) {
+                progress[currentLesson].complete = true;
+                window.addXP(100); 
+                window.updateSidebar(); 
+            }
         } else {
             html += `<h3 style="color:var(--error)">TRY AGAIN</h3><p>You need 7/10.</p><button class="btn" onclick="window.renderQuiz()">Retry</button>`;
         }
@@ -801,34 +987,24 @@
     };
 
     window.unlockNext = function() {
-        if(unlockedLessons < 4) {
-            unlockedLessons++;
-            window.loadLessonIntro(currentLesson + 1);
-        } else {
-            let overlay = document.createElement('div');
-            overlay.style.position = 'fixed'; overlay.style.top = '0'; overlay.style.left = '0';
-            overlay.style.width = '100%'; overlay.style.height = '100%';
-            overlay.style.background = 'rgba(0,0,0,0.9)'; overlay.style.color = 'white';
-            overlay.style.display = 'flex'; overlay.style.flexDirection = 'column';
-            overlay.style.justifyContent = 'center'; overlay.style.alignItems = 'center'; overlay.style.zIndex = '1000';
-            overlay.innerHTML = `<h1>🎉 MISSION COMPLETE! 🎉</h1><p style="font-size:2em;">You mastered all 4 levels!</p><button class="btn" onclick="location.reload()">Play Again</button>`;
-            document.body.appendChild(overlay);
-        }
+        window.loadHome();
     };
 
     window.checkExact = function(id, ans) {
         let val = document.getElementById(id).value.replace(/\s/g,'').toLowerCase();
-        if(val === ans.toLowerCase()) { alert("Correct! +20 XP"); window.addXP(20); } else { alert("Try again."); }
+        if(val === ans.toLowerCase()) { alert("Correct!"); if(!progress[currentLesson].elaborate) { window.addXP(20); progress[currentLesson].elaborate=true; } } 
+        else { alert("Try again."); }
     };
     window.checkMulti = function(id, opts) {
         let val = document.getElementById(id).value.replace(/\s/g,'').toLowerCase();
-        if(opts.includes(val)) { alert("Correct! +20 XP"); window.addXP(20); } else { alert("Try again."); }
+        if(opts.includes(val)) { alert("Correct!"); if(!progress[currentLesson].elaborate) { window.addXP(20); progress[currentLesson].elaborate=true; } } 
+        else { alert("Try again."); }
     };
 
     // START
     window.loadHome();
 
-})();
+});
 </script>
 </body>
 </html>
