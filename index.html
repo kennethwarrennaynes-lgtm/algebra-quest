@@ -215,6 +215,7 @@
         .btn:hover { transform: translateY(-3px); background: var(--primary-dark); }
         .btn-outline { background: white; border: 2px solid var(--primary); color: var(--primary); }
         .btn-next { position: absolute; bottom: 40px; right: 40px; background: var(--success); animation: popIn 0.5s ease; }
+        .btn:disabled { background: #b2bec3; cursor: not-allowed; transform: none; box-shadow: none; }
         
         .token { background: var(--accent); padding: 10px 15px; border-radius: 5px; cursor: pointer; margin: 5px; display: inline-block; font-weight: bold; color: white; }
         
@@ -321,6 +322,13 @@
         .keyword-highlight { color: #d63031; font-weight: bold; border-bottom: 2px solid #d63031; }
         .symbol-highlight { color: #0984e3; font-weight: bold; background: #dfe6e9; padding: 0 5px; border-radius: 4px; }
 
+        /* --- LIFE SYSTEM (NEW) --- */
+        .life-container {
+            display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; font-size: 1.5em;
+        }
+        .heart { color: #d63031; animation: pulseGreen 2s infinite; }
+        .heart.lost { color: #ccc; animation: none; }
+
     </style>
 </head>
 <body>
@@ -378,9 +386,13 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentLesson = 1;
     let unlockedLessons = 4;
     let xp = 0;
+    let lives = 3; // --- NEW: LIFE SYSTEM START ---
     
     // NAVIGATION STATE TRACKING
     let currentView = 'home'; 
+    
+    // GLOBAL TIMER VARIABLE
+    let hintTimer = null;
 
     let progress = {
         1: { engage: false, explore: false, explain: false, elaborate: false, evaluate: false, complete: false },
@@ -867,24 +879,24 @@ document.addEventListener('DOMContentLoaded', function() {
             l3_engage: { type: 'truth', title: "Truth Detector", desc: "<strong>Mission:</strong> True or False?", rounds: [ { q: "5 + 3 = 3 + 5", a: "True" }, { q: "5 - 3 = 3 - 5", a: "False" }, { q: "2(3) = 3(2)", a: "True" }, { q: "10 ÷ 2 = 2 ÷ 10", a: "False" }, { q: "(1+2)+3 = 1+(2+3)", a: "True" } ]},
             l3_explore: { type: 'sort', title: "Sorter", desc: "<strong>Mission:</strong> Identify the Property.", rounds: [ { q: "a + b = b + a", ans: "Commutative" }, { q: "3(x + 2) = 3x + 6", ans: "Distributive" }, { q: "(a+b)+c = a+(b+c)", ans: "Associative" }, { q: "x + 0 = x", ans: "Identity" }, { q: "5 + (-5) = 0", ans: "Inverse" } ]},
             l4_engage: { type: 'balance', title: "Balance Scale", desc: "<strong>Mission:</strong> The scale is out of balance! Select the action needed on the RIGHT to equal the action taken on the LEFT.", rounds: [ 
-                { q: "We ADDED 3 blocks to the Left. What must we do to the Right?", opts: ["Subtract 3", "Add 3"], a: "Add 3", leftW: [1,1,1,1,1,1], rightW: [1,1,1] }, 
-                { q: "We REMOVED 2 blocks from the Left. What must we do to the Right?", opts: ["Subtract 2", "Add 2"], a: "Subtract 2", leftW: [1,1], rightW: [1,1,1,1] }, 
-                { q: "We DOUBLED the Left side. What must we do to the Right?", opts: ["Multiply by 2", "Divide by 2"], a: "Multiply by 2", leftW: [1,1,1,1,1,1,1,1], rightW: [1,1,1,1] }, 
-                { q: "We CUT the Left side in HALF. What must we do to the Right?", opts: ["Divide by 2", "Multiply by 2"], a: "Divide by 2", leftW: [1,1], rightW: [1,1,1,1] }, 
-                { q: "To solve an equation, we perform the ____ operation.", opts: ["Inverse", "Same"], a: "Inverse", leftW: [1,1,1], rightW: [1,1,1] },
-                { q: "We Added 5 to the Left. How do we balance the Right?", opts: ["Add 5", "Subtract 5"], a: "Add 5", leftW: [1,1,1,1,1], rightW: [] },
-                { q: "We Multiplied the Left by 3. What do we do to the Right?", opts: ["Multiply by 3", "Divide by 3"], a: "Multiply by 3", leftW: [1,1,1], rightW: [1] },
-                { q: "We Divided the Left by 4. What do we do to the Right?", opts: ["Divide by 4", "Multiply by 4"], a: "Divide by 4", leftW: [1], rightW: [1,1,1,1] }
+                { q: "We ADDED 3 blocks to the Left. What must we do to the Right?", opts: ["Subtract 3", "Add 3", "Multiply 3", "Divide 3"], a: "Add 3", leftW: [1,1,1,1,1,1], rightW: [1,1,1] }, 
+                { q: "We REMOVED 2 blocks from the Left. What must we do to the Right?", opts: ["Subtract 2", "Add 2", "Multiply 2", "Divide 2"], a: "Subtract 2", leftW: [1,1], rightW: [1,1,1,1] }, 
+                { q: "We DOUBLED the Left side. What must we do to the Right?", opts: ["Multiply by 2", "Divide by 2", "Add 2", "Subtract 2"], a: "Multiply by 2", leftW: [1,1,1,1,1,1,1,1], rightW: [1,1,1,1] }, 
+                { q: "We CUT the Left side in HALF. What must we do to the Right?", opts: ["Divide by 2", "Multiply by 2", "Subtract 2", "Add 2"], a: "Divide by 2", leftW: [1,1], rightW: [1,1,1,1] }, 
+                { q: "To solve an equation, we perform the ____ operation.", opts: ["Inverse", "Same", "Opposite", "Reverse"], a: "Inverse", leftW: [1,1,1], rightW: [1,1,1] },
+                { q: "We Added 5 to the Left. How do we balance the Right?", opts: ["Add 5", "Subtract 5", "Multiply 5", "Divide 5"], a: "Add 5", leftW: [1,1,1,1,1], rightW: [] },
+                { q: "We Multiplied the Left by 3. What do we do to the Right?", opts: ["Multiply by 3", "Divide by 3", "Add 3", "Subtract 3"], a: "Multiply by 3", leftW: [1,1,1], rightW: [1] },
+                { q: "We Divided the Left by 4. What do we do to the Right?", opts: ["Divide by 4", "Multiply by 4", "Add 4", "Subtract 4"], a: "Divide by 4", leftW: [1], rightW: [1,1,1,1] }
             ]},
             l4_explore: { type: 'wizard', title: "Wizard", desc: "<strong>Mission:</strong> Choose the correct next step.", rounds: [ 
-                { q: "Solve x + 5 = 12", opts: ["Add 5", "Subtract 5"], a: "Subtract 5" }, 
-                { q: "Solve 3x = 15", opts: ["Divide 3", "Multiply 3"], a: "Divide 3" }, 
-                { q: "Solve x/4 = 2", opts: ["Multiply 4", "Divide 4"], a: "Multiply 4" }, 
-                { q: "2x - 1 = 9 (Step 1)", opts: ["Add 1", "Divide 2"], a: "Add 1" }, 
-                { q: "2x = 10 (Step 2)", opts: ["Divide 2", "Subtract 2"], a: "Divide 2" },
-                { q: "Solve x - 7 = 3", opts: ["Add 7", "Subtract 7"], a: "Add 7" },
-                { q: "Solve 5x = 20", opts: ["Divide 5", "Multiply 5"], a: "Divide 5" },
-                { q: "Solve x/2 = 10", opts: ["Multiply 2", "Divide 2"], a: "Multiply 2" }
+                { q: "Solve x + 5 = 12", opts: ["Add 5", "Subtract 5", "Divide 5"], a: "Subtract 5" }, 
+                { q: "Solve 3x = 15", opts: ["Divide 3", "Multiply 3", "Subtract 3"], a: "Divide 3" }, 
+                { q: "Solve x/4 = 2", opts: ["Multiply 4", "Divide 4", "Add 4"], a: "Multiply 4" }, 
+                { q: "2x - 1 = 9 (Step 1)", opts: ["Add 1", "Divide 2", "Subtract 1"], a: "Add 1" }, 
+                { q: "2x = 10 (Step 2)", opts: ["Divide 2", "Subtract 2", "Add 2"], a: "Divide 2" },
+                { q: "Solve x - 7 = 3", opts: ["Add 7", "Subtract 7", "Divide 7"], a: "Add 7" },
+                { q: "Solve 5x = 20", opts: ["Divide 5", "Multiply 5", "Subtract 5"], a: "Divide 5" },
+                { q: "Solve x/2 = 10", opts: ["Multiply 2", "Divide 2", "Add 2"], a: "Multiply 2" }
             ]}
         },
         quizzes: {
@@ -1200,7 +1212,11 @@ document.addEventListener('DOMContentLoaded', function() {
        GAME FUNCTIONS with RANDOMIZATION & SAFETY
        ========================================= */
     window.initGame = function(type) {
-        gameRound = 0; gameScore = 0;
+        // RESET STATE
+        gameRound = 0; 
+        gameScore = 0;
+        lives = 3; // Reset lives at start of every game
+        
         let pool = [...content.games[`l${currentLesson}_${type}`].rounds];
         
         let shuffledPool = shuffle(pool);
@@ -1219,9 +1235,18 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     window.renderGameRound = function(type) {
+        // --- 1. CLEAR PREVIOUS TIMER ---
+        if(hintTimer) clearTimeout(hintTimer);
+
         const data = content.games[`l${currentLesson}_${type}`]; 
         const board = document.getElementById('gameBoard');
         
+        // CHECK LIVES
+        if(lives <= 0) {
+             board.innerHTML = `<div class="game-board"><h2 style='color:var(--error)'>GAME OVER</h2><p>You ran out of hearts!</p><button class="btn" onclick="window.initGame('${type}')">Try Again 🔄</button></div>`;
+             return;
+        }
+
         if(gameRound >= activeGameRounds.length) { 
             let earnedXP = 0;
             if(!progress[currentLesson][type]) {
@@ -1234,7 +1259,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const round = activeGameRounds[gameRound]; 
-        let html = `<div class="mission-brief"><strong>MISSION:</strong> ${data.desc}</div><h3>Round ${gameRound+1}/5</h3>`;
+        
+        // --- RENDER HEARTS ---
+        let heartsHtml = `<div class="life-container">`;
+        for(let i=0; i<3; i++) {
+            heartsHtml += `<span class="heart ${i < lives ? '' : 'lost'}">❤️</span>`;
+        }
+        heartsHtml += `</div>`;
+
+        let html = `${heartsHtml}<div class="mission-brief"><strong>MISSION:</strong> ${data.desc}</div><h3>Round ${gameRound+1}/5</h3>`;
 
         if(data.type === 'select') {
             html += `<h2 style="margin:20px;">Find the <strong>${round.q}</strong></h2>`;
@@ -1247,7 +1280,7 @@ document.addEventListener('DOMContentLoaded', function() {
             html += `</div><div id="fb" class="feedback"></div>`;
         }
         else if(['speed','balance','truth','wizard','sort'].includes(data.type)) {
-            html += `<div class="math-display">${round.text || round.q}</div><div>`;
+            html += `<div class="math-display">${round.text || round.q}</div><div class="options-container">`;
             if(data.type === 'balance') {
                  let lBlocks = round.leftW ? round.leftW.map(w => `<div class='weight-cube'></div>`).join('') : "";
                  let rBlocks = round.rightW ? round.rightW.map(w => `<div class='weight-cube'></div>`).join('') : "";
@@ -1268,55 +1301,64 @@ document.addEventListener('DOMContentLoaded', function() {
                 let props = ['Commutative','Associative','Distributive','Identity','Inverse'];
                 props = shuffle(props); 
                 props.forEach(p => {
-                    // SAFETY FILTER for button content, PASS RAW to checker
-                    html += `<button class="btn btn-outline" onclick="window.checkStd('${escapeHtml(p)}','${round.ans}','${type}')">${escapeHtml(p)}</button>`;
+                    html += `<button class="btn btn-outline game-btn" onclick="window.checkStd(this, '${escapeHtml(p)}','${round.ans}','${type}')">${escapeHtml(p)}</button>`;
                 });
             } else if (data.type === 'truth') {
-                // True/False safe literals
-                html += `<button class="btn" style="background:var(--success)" onclick="window.checkStd('True','${round.a}','${type}')">True</button>`;
-                html += `<button class="btn" style="background:var(--error)" onclick="window.checkStd('False','${round.a}','${type}')">False</button>`;
+                html += `<button class="btn game-btn" style="background:var(--success)" onclick="window.checkStd(this, 'True','${round.a}','${type}')">True</button>`;
+                html += `<button class="btn game-btn" style="background:var(--error)" onclick="window.checkStd(this, 'False','${round.a}','${type}')">False</button>`;
             } else if (data.type === 'balance') {
-                // FIXED: Pass raw strings to checker, but escape display
-                round.opts.forEach(o => html += `<button class="btn btn-outline" onclick="window.checkBalance('${o}','${round.a}','${type}')">${escapeHtml(o)}</button>`);
+                round.opts.forEach(o => html += `<button class="btn btn-outline game-btn" onclick="window.checkBalance(this, '${o}','${round.a}','${type}')">${escapeHtml(o)}</button>`);
             } else {
-                // FIXED: Pass raw strings to checker, but escape display
-                round.opts ? round.opts.forEach(o => html += `<button class="btn btn-outline" onclick="window.checkStd('${o}','${round.a}','${type}')">${escapeHtml(o)}</button>`) : null;
+                round.opts ? round.opts.forEach(o => html += `<button class="btn btn-outline game-btn" onclick="window.checkStd(this, '${o}','${round.a}','${type}')">${escapeHtml(o)}</button>`) : null;
             }
             html += `</div><div id="fb" class="feedback"></div>`;
         }
         else if(data.type === 'clicker') {
             html += `<h4>${round.task}</h4><div class="math-display">`;
-            round.parts.forEach(p => html += `<span class="highlightable" onclick="window.checkClicker('${p}','${round.ans}','${type}')">${p}</span> `);
+            round.parts.forEach(p => html += `<span class="highlightable" onclick="window.checkClicker(this, '${p}','${round.ans}','${type}')">${p}</span> `);
             html += `</div><div id="fb" class="feedback"></div>`;
         }
         else if(data.type === 'builder') {
             currentBuilder = "";
             html += `<h4>Make: ${round.q}</h4><div class="math-display" id="buildArea">...</div><div>`;
             let tokens = shuffle([...round.blocks]);
-            // FIX: Uses window.activeGameRounds explicitly now
             tokens.forEach(b => html += `<span class="token" onclick="window.addToBuild('${b}', window.activeGameRounds[${gameRound}].ans, '${type}')">${b}</span>`);
             html += `<button class="btn btn-outline" onclick="window.resetBuild()">Reset</button></div><div id="fb" class="feedback"></div>`;
         }
         
         // HINT SYSTEM INJECTION
-        html += `<button id="btnHint" class="hint-btn" onclick="window.showHint()">💡 Need a Hint?</button>
+        html += `<button id="btnHint" class="hint-btn" style="display:none" onclick="window.showHint()">💡 Need a Hint?</button>
                  <div id="hintDisplay" class="hint-text"></div>`;
         
         board.innerHTML = html;
         
-        // SHOW HINT AFTER DELAY
-        setTimeout(() => {
+        // --- 2. START NEW TIMER (15s) ---
+        hintTimer = setTimeout(() => {
             const hintBtn = document.getElementById('btnHint');
             if(hintBtn) hintBtn.style.display = 'inline-block';
-        }, 5000); 
+        }, 15000); 
     };
 
-    // --- CHECKERS (FIXED: RAW COMPARISON) ---
-    window.checkStd = function(input, correct, type) {
+    // --- LOCKOUT FUNCTION ---
+    window.lockUI = function() {
+        const btns = document.querySelectorAll('.game-btn, .word-box, .highlightable');
+        btns.forEach(b => b.setAttribute('disabled', 'true'));
+        setTimeout(() => {
+             btns.forEach(b => b.removeAttribute('disabled'));
+        }, 2000); // 2 second lockout
+    };
+
+    // --- CHECKERS UPDATED WITH LIVES & LOCKOUT ---
+    window.checkStd = function(el, input, correct, type) {
         if(input === correct) {
             window.showFb(true, "Correct!"); gameScore++;
             setTimeout(() => { gameRound++; window.renderGameRound(type); }, 1000);
-        } else { window.showFb(false, "Try Again!"); }
+        } else { 
+            lives--; 
+            window.showFb(false, "Wrong! -1 ❤️"); 
+            window.lockUI();
+            window.renderGameRound(type); // Re-render to update hearts immediately
+        }
     };
 
     window.checkWordChoice = function(el, word, correct) {
@@ -1325,28 +1367,46 @@ document.addEventListener('DOMContentLoaded', function() {
             window.showFb(true, "Correct!"); gameScore++;
             setTimeout(() => { gameRound++; window.renderGameRound('engage'); }, 1000);
         } else { 
+            lives--;
             el.classList.add('wrong');
-            window.showFb(false, "Try Again!"); 
+            window.showFb(false, "Wrong! -1 ❤️"); 
+            window.lockUI();
+            // Optional: Re-render hearts without resetting board
+            document.querySelector('.life-container').innerHTML = window.getHeartsHTML();
         }
     };
 
-    window.checkClicker = function(val, correct, type) {
+    window.getHeartsHTML = function() {
+        let html = '';
+        for(let i=0; i<3; i++) html += `<span class="heart ${i < lives ? '' : 'lost'}">❤️</span>`;
+        return html;
+    };
+
+    window.checkClicker = function(el, val, correct, type) {
         if(val.trim() === correct.trim()) {
             window.showFb(true, "Correct!"); gameScore++;
             setTimeout(() => { gameRound++; window.renderGameRound(type); }, 1000);
-        } else { window.showFb(false, "Wrong part!"); }
+        } else { 
+            lives--;
+            window.showFb(false, "Wrong part! -1 ❤️"); 
+            window.lockUI();
+            window.renderGameRound(type);
+        }
     };
 
-    window.checkBalance = function(input, correct, type) {
+    window.checkBalance = function(el, input, correct, type) {
         const beam = document.getElementById('scaleBeam');
         if(input === correct) {
             beam.style.transform = "rotate(0deg)";
             window.showFb(true, "Balanced!"); gameScore++;
             setTimeout(() => { gameRound++; window.renderGameRound(type); }, 1500); 
         } else {
+            lives--;
             beam.style.transform = "rotate(20deg)";
             setTimeout(() => { beam.style.transform = "rotate(-15deg)"; }, 200); 
-            window.showFb(false, "Scale Unbalanced!");
+            window.showFb(false, "Unbalanced! -1 ❤️");
+            window.lockUI();
+            setTimeout(() => { window.renderGameRound(type); }, 500); // Re-render to show lost heart
         }
     };
 
@@ -1354,17 +1414,13 @@ document.addEventListener('DOMContentLoaded', function() {
         currentBuilder += val;
         document.getElementById('buildArea').innerText = currentBuilder;
         
-        // CHECKER FIX: Handle both String targets and Array targets (for x+5 vs 5+x)
         let isCorrect = false;
         let isLonger = false;
         
         if (Array.isArray(target)) {
-            // If target is array ["x+5", "5+x"]
             if (target.includes(currentBuilder)) isCorrect = true;
-            // Check length of first option as proxy
             if (currentBuilder.length >= target[0].length && !isCorrect) isLonger = true;
         } else {
-            // If target is simple string "x+5"
             if (currentBuilder === target) isCorrect = true;
             if (currentBuilder.length >= target.length && !isCorrect) isLonger = true;
         }
@@ -1373,8 +1429,12 @@ document.addEventListener('DOMContentLoaded', function() {
             window.showFb(true, "Built!"); gameScore++;
             setTimeout(() => { gameRound++; window.renderGameRound(type); }, 1000);
         } else if (isLonger) {
-            window.showFb(false, "Incorrect. Resetting...");
-            setTimeout(window.resetBuild, 1000);
+            lives--;
+            window.showFb(false, "Incorrect! -1 ❤️");
+            setTimeout(() => {
+                if(lives <= 0) window.renderGameRound(type); // Trigger Game Over
+                else window.resetBuild();
+            }, 1000);
         }
     };
     window.resetBuild = function() { currentBuilder = ""; document.getElementById('buildArea').innerText = "..."; document.getElementById('fb').style.display='none'; };
@@ -1384,17 +1444,40 @@ document.addEventListener('DOMContentLoaded', function() {
         fb.innerText = msg; fb.className = isCorrect ? "feedback correct" : "feedback wrong";
     };
     
-    // UPDATED HINT FUNCTION (MORE INSTRUCTIONAL)
+    // UPDATED HINT FUNCTION (SCAFFOLDING, NOT ANSWERS)
     window.showHint = function() {
         const round = window.activeGameRounds[gameRound];
-        let hintMsg = "Read the mission brief carefully!";
+        const qText = (round.q || round.task || round.text || "").toLowerCase();
+        let hintMsg = "Think about what the question is asking.";
         
-        if (round.q.includes("subtracted from")) hintMsg = "For 'subtracted from', the number comes AFTER the variable (e.g., x - 10).";
-        if (round.q.includes("at most")) hintMsg = "The value must be lower than or equal to the limit. Use ≤.";
-        if (round.q.includes("at least")) hintMsg = "The value must be higher than or equal to the limit. Use ≥.";
-        if (round.q.includes("Variable")) hintMsg = "The variable is usually a letter like x, y, or a.";
-        if (round.q.includes("Product")) hintMsg = "Product is the result of multiplication. Use parenthesis ( ) or put them side-by-side.";
-        
+        // L1: ANATOMY
+        if(qText.includes("noun")) hintMsg = "Think about grammar: A noun is a person, place, or thing.";
+        if(qText.includes("verb")) hintMsg = "Look for the action word.";
+        if(qText.includes("numerical coefficient")) hintMsg = "Look for the NUMBER attached to the letter.";
+        if(qText.includes("literal coefficient")) hintMsg = "Look for the LETTER part.";
+        if(qText.includes("constant")) hintMsg = "Find the number that stands alone (no variable).";
+        if(qText.includes("variable")) hintMsg = "Find the letter representing the unknown value.";
+
+        // L2: TRANSLATION
+        if (qText.includes("subtracted from")) hintMsg = "Switch word alert! The number being subtracted goes last.";
+        if (qText.includes("at most")) hintMsg = "Think about a ceiling. You can't go higher than the limit.";
+        if (qText.includes("at least")) hintMsg = "Think about a floor. You must be equal to or higher than the limit.";
+        if (qText.includes("product")) hintMsg = "This operation puts numbers side-by-side or uses parentheses.";
+        if (qText.includes("quotient")) hintMsg = "This is the result of division.";
+
+        // L3: PROPERTIES
+        if (qText.includes("commutative")) hintMsg = "Think 'Commute'. The numbers move or swap places.";
+        if (qText.includes("associative")) hintMsg = "Think 'Group'. Look at how the parentheses () move.";
+        if (qText.includes("distributive")) hintMsg = "Look for a number outside multiplying everything inside.";
+        if (qText.includes("identity")) hintMsg = "The value stays the same (Identical).";
+        if (qText.includes("inverse")) hintMsg = "The value is cancelled out to zero or one.";
+
+        // L4: SOLVING
+        if (qText.includes("solve x +")) hintMsg = "To undo + (addition), use - (subtraction).";
+        if (qText.includes("solve x -")) hintMsg = "To undo - (subtraction), use + (addition).";
+        if(qText.includes("solve 3x") || qText.includes("solve 5x")) hintMsg = "This is multiplication. Undo it with Division.";
+        if(qText.includes("x/4") || qText.includes("x/2")) hintMsg = "This is division. Undo it with Multiplication.";
+
         document.getElementById('hintDisplay').innerText = hintMsg;
         document.getElementById('hintDisplay').style.display = 'block';
     };
@@ -1417,7 +1500,6 @@ document.addEventListener('DOMContentLoaded', function() {
         activeQuizQuestions.forEach((q, i) => {
             let opts = "";
             q.opts.forEach((o, optIdx) => {
-                // FIXED: Use escapeHtml for DISPLAY only
                 opts += `<span class="quiz-opt" id="q${i}_o${optIdx}" onclick="window.selectQuizOpt(${i}, ${optIdx})">${escapeHtml(o)}</span>`;
             });
             html += `<div class="quiz-item"><p><strong>${i+1}.</strong> ${q.q}</p>${opts}</div>`;
